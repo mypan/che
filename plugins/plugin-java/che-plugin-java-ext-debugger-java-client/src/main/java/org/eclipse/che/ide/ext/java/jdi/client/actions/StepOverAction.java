@@ -17,7 +17,6 @@ import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.debug.BreakpointManager;
 import org.eclipse.che.ide.debug.Debugger;
 import org.eclipse.che.ide.debug.DebuggerManager;
-import org.eclipse.che.ide.debug.DebuggerState;
 import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeLocalizationConstant;
 import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeResources;
 
@@ -28,7 +27,7 @@ import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeResources;
  */
 public class StepOverAction extends Action {
 
-    private final DebuggerManager debuggerManager;
+    private final DebuggerManager   debuggerManager;
     private final BreakpointManager breakpointManager;
 
     @Inject
@@ -44,7 +43,7 @@ public class StepOverAction extends Action {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Debugger debugger = debuggerManager.getDebugger();
+        Debugger debugger = debuggerManager.getActiveDebugger();
         if (debugger != null) {
             debugger.stepOver();
         }
@@ -52,11 +51,10 @@ public class StepOverAction extends Action {
 
     @Override
     public void update(ActionEvent e) {
-        Debugger debugger = debuggerManager.getDebugger();
-
-        e.getPresentation().setEnabled(debugger != null &&
-                debugger.getDebuggerState() == DebuggerState.CONNECTED &&
-                breakpointManager.getCurrentBreakpoint() != null);
+        Debugger debugger = debuggerManager.getActiveDebugger();
+        e.getPresentation().setEnabled(debugger != null
+                                       && debugger.isConnected()
+                                       && breakpointManager.getCurrentBreakpoint() != null);
     }
 
 }

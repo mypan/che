@@ -10,30 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.ide.debug;
 
-import org.eclipse.che.commons.annotation.Nullable;
-
-import java.util.List;
-
 /**
- * Breakpoint manager.
- *
  * @author Anatoliy Bazko
  */
-public interface BreakpointManager {
-
-    /**
-     * Toggle / untoggle breakpoint.
-     */
-    void changeBreakpointState(int lineNumber);
-
-    /**
-     * @return current breakpoint
-     */
-    @Nullable
-    Breakpoint getCurrentBreakpoint();
-
-    /**
-     * @return all breakpoints
-     */
-    List<Breakpoint> getBreakpointList();
+public interface DebuggerConnectionContext {
 }

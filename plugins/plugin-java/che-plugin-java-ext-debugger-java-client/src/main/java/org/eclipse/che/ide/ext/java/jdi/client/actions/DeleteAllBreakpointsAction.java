@@ -43,7 +43,7 @@ public class DeleteAllBreakpointsAction extends Action {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Debugger debugger = debuggerManager.getDebugger();
+        Debugger debugger = debuggerManager.getActiveDebugger();
         if (debugger != null) {
             debugger.deleteAllBreakpoints();
         }

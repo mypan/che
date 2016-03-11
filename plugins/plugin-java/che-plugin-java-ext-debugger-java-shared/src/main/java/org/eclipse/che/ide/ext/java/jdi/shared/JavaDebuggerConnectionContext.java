@@ -11,41 +11,24 @@
 package org.eclipse.che.ide.ext.java.jdi.shared;
 
 import org.eclipse.che.dto.shared.DTO;
+import org.eclipse.che.ide.debug.DebuggerConnectionContext;
 
 /**
  * Summary of debugger information.
  *
- * @author andrew00x
+ * @author Anatoliy Bazko
  */
 @DTO
-public interface DebuggerInfo {
+public interface JavaDebuggerConnectionContext extends DebuggerConnectionContext {
     String getHost();
 
     void setHost(String host);
 
-    DebuggerInfo withHost(String host);
+    JavaDebuggerConnectionContext withHost(String host);
 
     int getPort();
 
     void setPort(int port);
 
-    DebuggerInfo withPort(int port);
-
-    String getId();
-
-    void setId(String id);
-
-    DebuggerInfo withId(String id);
-
-    String getVmName();
-
-    void setVmName(String vmName);
-
-    DebuggerInfo withVmName(String vmName);
-
-    String getVmVersion();
-
-    void setVmVersion(String vmVersion);
-
-    DebuggerInfo withVmVersion(String vmVersion);
+    JavaDebuggerConnectionContext withPort(int port);
 }

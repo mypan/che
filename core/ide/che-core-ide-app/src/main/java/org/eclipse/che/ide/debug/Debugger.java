@@ -13,49 +13,45 @@ package org.eclipse.che.ide.debug;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.project.tree.VirtualFile;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
  * The general class which provides to manage breakpoints on server.
  *
- * @author <a href="mailto:aplotnikov@codenvy.com">Andrey Plotnikov</a>
+ * @author Andrey Plotnikov
+ * @author Anatoliy Bazko
  */
-public interface Debugger {
+public interface Debugger<T extends DebuggerConnectionContext> extends DebuggerObservable {
+
     /**
      * Adds new breakpoint on server.
      *
      * @param file
      * @param lineNumber
-     * @param callback
      */
-    void addBreakpoint(VirtualFile file, int lineNumber, AsyncCallback<Breakpoint> callback);
+    void addBreakpoint(VirtualFile file, int lineNumber);
 
     /**
      * Deletes breakpoint on server.
      *
      * @param file
      * @param lineNumber
-     * @param callback
      */
-    void deleteBreakpoint(VirtualFile file, int lineNumber, AsyncCallback<Void> callback);
+    void deleteBreakpoint(VirtualFile file, int lineNumber);
 
     /**
-     * Deletes all breakpoints
+     * Deletes all breakpoints on server.
      */
     void deleteAllBreakpoints();
 
     /**
-     * Attaches debugger using given port and host.
-     *
-     * @param host host to which debugger will be connected
-     * @param port port to which debugger will be connected in specified host
+     * Attaches debugger.
      */
-    void attachDebugger(final String host, final int port);
+    Promise<Void> attachDebugger(@NotNull T connectionContext);
 
     /**
-     * Disconnects from process under a debugger.
+     * Disconnects from process under debugger.
      */
     void disconnectDebugger();
 
@@ -81,23 +77,31 @@ public interface Debugger {
 
     /**
      * Evaluates given expression
-     *
-     * @param expression expression to evaluate
-     * @return result of evaluating expression
      */
     Promise<String> evaluateExpression(String expression);
 
     /**
+     * @return the value of the variable
+     */
+    Promise<String> getValue(String variable);
+
+    /**
+     * @return stack frame dump
+     */
+    Promise<String> getStackFrameDump();
+
+    /**
      * Changes value of given variable
      *
-     * @param path path to changing variable
-     * @param newValue new value for given variable
+     * @param path
+     *         path to changing variable
+     * @param newValue
+     *         new value for given variable
      */
     void changeVariableValue(List<String> path, String newValue);
 
     /**
-     * @return current debugger state
+     * Indicates if debugger is connected.
      */
-    DebuggerState getDebuggerState();
-
+    boolean isConnected();
 }

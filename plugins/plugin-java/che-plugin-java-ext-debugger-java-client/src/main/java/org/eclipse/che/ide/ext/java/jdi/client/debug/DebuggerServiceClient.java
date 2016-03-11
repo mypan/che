@@ -11,9 +11,11 @@
 package org.eclipse.che.ide.ext.java.jdi.client.debug;
 
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.ide.debug.DebuggerConnectionContext;
 import org.eclipse.che.ide.ext.java.jdi.shared.BreakPoint;
+import org.eclipse.che.ide.ext.java.jdi.shared.BreakPointList;
 import org.eclipse.che.ide.ext.java.jdi.shared.DebuggerEventList;
-import org.eclipse.che.ide.ext.java.jdi.shared.DebuggerInfo;
+import org.eclipse.che.ide.ext.java.jdi.shared.JavaDebuggerInfo;
 import org.eclipse.che.ide.ext.java.jdi.shared.StackFrameDump;
 import org.eclipse.che.ide.ext.java.jdi.shared.UpdateVariableRequest;
 import org.eclipse.che.ide.ext.java.jdi.shared.Value;
@@ -27,129 +29,80 @@ import javax.validation.constraints.NotNull;
  *
  * @author Vitaly Parfonov
  */
-public interface DebuggerServiceClient {
+public interface DebuggerServiceClient<T extends DebuggerConnectionContext>  {
+
     /**
      * Attach debugger.
-     *
-     * @param host
-     * @param port
-     * @param callback
      */
-    void connect(@NotNull String host, int port, @NotNull AsyncRequestCallback<DebuggerInfo> callback);
+    Promise<JavaDebuggerInfo> connect(@NotNull T connectionContext);
 
     /**
      * Disconnect debugger.
-     *
-     * @param id
-     * @param callback
      */
-    void disconnect(@NotNull String id, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> disconnect(@NotNull String id);
 
     /**
      * Adds breakpoint.
-     *
-     * @param id
-     * @param breakPoint
-     * @param callback
      */
-    void addBreakpoint(@NotNull String id, @NotNull BreakPoint breakPoint, @NotNull AsyncRequestCallback<Void> callback);
-
-    /**
-     * Returns list of breakpoints.
-     *
-     * @param id
-     * @param callback
-     */
-    void getAllBreakpoints(@NotNull String id, @NotNull AsyncRequestCallback<String> callback);
+    Promise<Void> addBreakpoint(@NotNull String id, @NotNull BreakPoint breakPoint);
 
     /**
      * Deletes breakpoint.
-     *
-     * @param id
-     * @param breakPoint
-     * @param callback
      */
-    void deleteBreakpoint(@NotNull String id, @NotNull BreakPoint breakPoint, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> deleteBreakpoint(@NotNull String id, @NotNull BreakPoint breakPoint);
+
+    /**
+     * Returns list of active breakpoints.
+     */
+    Promise<BreakPointList> getAllBreakpoints(@NotNull String id, @NotNull AsyncRequestCallback<String> callback);
 
     /**
      * Remove all breakpoints.
-     *
-     * @param id
-     * @param callback
      */
-    void deleteAllBreakpoints(@NotNull String id, @NotNull AsyncRequestCallback<String> callback);
+    Promise<Void> deleteAllBreakpoints(@NotNull String id);
 
     /**
      * Checks event.
-     *
-     * @param id
-     * @param callback
      */
     void checkEvents(@NotNull String id, @NotNull AsyncRequestCallback<DebuggerEventList> callback);
 
     /**
      * Get dump of fields and local variable of current stack frame.
-     *
-     * @param id
-     * @param callback
      */
-    void getStackFrameDump(@NotNull String id, @NotNull AsyncRequestCallback<StackFrameDump> callback);
+    Promise<StackFrameDump> getStackFrameDump(@NotNull String id);
 
     /**
      * Resume process.
-     *
-     * @param id
-     * @param callback
      */
-    void resume(@NotNull String id, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> resume(@NotNull String id);
 
     /**
      * Returns value of a variable.
-     *
-     * @param id
-     * @param var
-     * @param callback
      */
-    void getValue(@NotNull String id, @NotNull Variable var, @NotNull AsyncRequestCallback<Value> callback);
+    Promise<Value> getValue(@NotNull String id, @NotNull Variable var);
 
     /**
      * Sets value of a variable.
-     *
-     * @param id
-     * @param request
-     * @param callback
      */
-    void setValue(@NotNull String id, @NotNull UpdateVariableRequest request, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> setValue(@NotNull String id, @NotNull UpdateVariableRequest request);
 
     /**
      * Do step into.
-     *
-     * @param id
-     * @param callback
      */
-    void stepInto(@NotNull String id, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> stepInto(@NotNull String id);
 
     /**
      * Do step over.
-     *
-     * @param id
-     * @param callback
      */
-    void stepOver(@NotNull String id, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> stepOver(@NotNull String id);
 
     /**
      * Do step return.
-     *
-     * @param id
-     * @param callback
      */
-    void stepOut(@NotNull String id, @NotNull AsyncRequestCallback<Void> callback);
+    Promise<Void> stepOut(@NotNull String id);
 
     /**
      * Evaluate an expression.
-     *
-     * @param id
-     * @param expression
      */
     Promise<String> evaluateExpression(@NotNull String id, @NotNull String expression);
 }

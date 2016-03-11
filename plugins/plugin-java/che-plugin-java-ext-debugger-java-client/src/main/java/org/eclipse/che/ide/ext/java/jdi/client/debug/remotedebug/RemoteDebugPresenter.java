@@ -17,11 +17,20 @@ import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerPresenter;
+import org.eclipse.che.ide.debug.Debugger;
+import org.eclipse.che.ide.debug.DebuggerManager;
+import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeLocalizationConstant;
+import org.eclipse.che.ide.ext.java.jdi.shared.JavaDebuggerConnectionContext;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFactory;
 import org.eclipse.che.ide.extension.machine.client.machine.Machine;
 import org.eclipse.che.ide.extension.machine.client.perspective.widgets.machine.appliance.server.Server;
+import org.eclipse.che.ide.extension.maven.shared.MavenAttributes;
+import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.eclipse.che.ide.util.Pair;
 
 import javax.validation.constraints.Min;
@@ -36,25 +45,32 @@ import java.util.List;
  */
 public class RemoteDebugPresenter implements RemoteDebugView.ActionDelegate {
 
-    private final RemoteDebugView      view;
-    private final DebuggerPresenter    debuggerPresenter;
-    private final AppContext           appContext;
-    private final MachineServiceClient machineServiceClient;
-    private final EntityFactory        entityFactory;
+    private final RemoteDebugView                 view;
+    private final DebuggerManager                 debuggerManager;
+    private final AppContext                      appContext;
+    private final MachineServiceClient            machineServiceClient;
+    private final EntityFactory                   entityFactory;
+    private final DtoFactory                      dtoFactory;
+    private final DialogFactory                   dialogFactory;
+    private final JavaRuntimeLocalizationConstant localizationConstant;
 
     @Inject
     public RemoteDebugPresenter(RemoteDebugView view,
-                                DebuggerPresenter debuggerPresenter,
-                                AppContext appContext,
+                                DebuggerManager debuggerManager, AppContext appContext,
                                 MachineServiceClient machineServiceClient,
-                                EntityFactory entityFactory) {
+                                EntityFactory entityFactory,
+                                DtoFactory dtoFactory,
+                                DialogFactory dialogFactory,
+                                JavaRuntimeLocalizationConstant localizationConstant) {
         this.view = view;
+        this.debuggerManager = debuggerManager;
         this.appContext = appContext;
         this.machineServiceClient = machineServiceClient;
         this.entityFactory = entityFactory;
+        this.dtoFactory = dtoFactory;
+        this.dialogFactory = dialogFactory;
+        this.localizationConstant = localizationConstant;
         this.view.setDelegate(this);
-
-        this.debuggerPresenter = debuggerPresenter;
     }
 
     /** Calls special method on view which shows dialog window. */
@@ -90,17 +106,42 @@ public class RemoteDebugPresenter implements RemoteDebugView.ActionDelegate {
         for (Server server : machine.getServersList()) {
             String description = server.getPort() + " (" + server.getRef() + ")";
             String value = server.getPort();
-            Pair<String, String> pair = new Pair<>(description, value);
+            Pair<String, String> pairs = new Pair<>(description, value);
 
-            ports.add(pair);
+            ports.add(pairs);
         }
 
         return ports;
     }
 
-    /** {@inheritDoc} */
     @Override
     public void onConfirmClicked(@NotNull String host, @Min(1) int port) {
-        debuggerPresenter.attachDebugger(host, port);
+        if (debuggerManager.getActiveDebugger() != null) {
+            dialogFactory.createMessageDialog(localizationConstant.connectToRemote(),
+                                              localizationConstant.debuggerAlreadyConnected(),
+                                              new ConfirmCallback() {
+                                                  @Override
+                                                  public void accepted() {
+                                                  }
+                                              });
+            return;
+        }
+
+        final Debugger javaDebugger = debuggerManager.getDebugger(MavenAttributes.MAVEN_ID);
+        if (javaDebugger != null) {
+            debuggerManager.setActiveDebugger(javaDebugger);
+
+            JavaDebuggerConnectionContext connectionContext = dtoFactory.createDto(JavaDebuggerConnectionContext.class);
+            connectionContext.setHost(host);
+            connectionContext.setPort(port);
+
+            Promise<Void> promise = javaDebugger.attachDebugger(connectionContext);
+            promise.catchError(new Operation<PromiseError>() {
+                @Override
+                public void apply(PromiseError arg) throws OperationException {
+                    debuggerManager.setActiveDebugger(null);
+                }
+            });
+        }
     }
 }

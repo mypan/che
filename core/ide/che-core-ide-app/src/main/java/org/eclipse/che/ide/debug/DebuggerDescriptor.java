@@ -10,20 +10,26 @@
  *******************************************************************************/
 package org.eclipse.che.ide.debug;
 
-import com.google.gwt.event.shared.EventHandler;
-
 /**
- * Handles {@link BreakpointStateEventHandler}.
+ * Represents general information about debugger.
  *
  * @author Anatoliy Bazko
  */
-public interface BreakpointStateEventHandler extends EventHandler {
+public class DebuggerDescriptor {
 
-    /**
-     * On breakpoint state changed
-     *
-     * @param event
-     *         the event
-     */
-    void onStateChanged(BreakpointStateEvent event);
+    private final String info;
+    private final String address;
+
+    public DebuggerDescriptor(String info, String address) {
+        this.info = info;
+        this.address = address;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public String getAddress() {
+        return address;
+    }
 }

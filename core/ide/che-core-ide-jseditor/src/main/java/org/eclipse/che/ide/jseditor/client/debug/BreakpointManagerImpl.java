@@ -11,9 +11,11 @@
 package org.eclipse.che.ide.jseditor.client.debug;
 
 import com.google.gwt.storage.client.Storage;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.editor.EditorAgent;
@@ -32,13 +34,10 @@ import org.eclipse.che.ide.debug.Breakpoint.Type;
 import org.eclipse.che.ide.debug.BreakpointManager;
 import org.eclipse.che.ide.debug.BreakpointRenderer;
 import org.eclipse.che.ide.debug.BreakpointRenderer.LineChangeAction;
-import org.eclipse.che.ide.debug.BreakpointStateEvent;
-import org.eclipse.che.ide.debug.BreakpointStateEventHandler;
 import org.eclipse.che.ide.debug.Debugger;
+import org.eclipse.che.ide.debug.DebuggerDescriptor;
 import org.eclipse.che.ide.debug.DebuggerManager;
-import org.eclipse.che.ide.debug.DebuggerState;
-import org.eclipse.che.ide.debug.DebuggerStateEvent;
-import org.eclipse.che.ide.debug.DebuggerStateEventHandler;
+import org.eclipse.che.ide.debug.DebuggerManagerObserver;
 import org.eclipse.che.ide.debug.HasBreakpointRenderer;
 import org.eclipse.che.ide.debug.dto.BreakpointDto;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -63,8 +62,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static org.eclipse.che.ide.debug.DebuggerState.DISCONNECTED;
-
 /**
  * Implementation of {@link BreakpointManager} for jseditor.
  *
@@ -72,11 +69,10 @@ import static org.eclipse.che.ide.debug.DebuggerState.DISCONNECTED;
  * @author Valeriy Svydenko
  * @author Dmytro Nochevnov
  */
-public class BreakpointManagerImpl implements BreakpointManager, LineChangeAction {
+public class BreakpointManagerImpl implements BreakpointManager,
+                                              LineChangeAction,
+                                              DebuggerManagerObserver {
 
-    /**
-     * The logger.
-     */
     private static final Logger LOG                           = Logger.getLogger(BreakpointManagerImpl.class.getName());
     private static final String LOCAL_STORAGE_BREAKPOINTS_KEY = "che-breakpoints";
 
@@ -85,8 +81,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
     private final DebuggerManager               debuggerManager;
     private final DtoFactory                    dtoFactory;
 
-    private Breakpoint    currentBreakpoint;
-    private DebuggerState debuggerState;
+    private Breakpoint currentBreakpoint;
 
     @Inject
     public BreakpointManagerImpl(final EditorAgent editorAgent,
@@ -96,18 +91,16 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         this.editorAgent = editorAgent;
         this.breakpoints = new HashMap<>();
         this.debuggerManager = debuggerManager;
-        this.debuggerState = DISCONNECTED;
         this.dtoFactory = dtoFactory;
 
+        this.debuggerManager.addObserver(this);
         registerEventHandlers(eventBus);
+        restoreBreakpoints();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void changeBreakpointState(final int lineNumber) {
-        final Debugger debugger = debuggerManager.getDebugger();
+        final Debugger debugger = debuggerManager.getActiveDebugger();
         if (debugger == null) {
             return;
         }
@@ -119,9 +112,9 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
 
         final VirtualFile activeFile = editor.getEditorInput().getFile();
 
-        List<Breakpoint> breakpointsForPath = this.breakpoints.get(activeFile.getPath());
-        if (breakpointsForPath != null) {
-            for (final Breakpoint breakpoint : breakpointsForPath) {
+        List<Breakpoint> pathBreakpoints = breakpoints.get(activeFile.getPath());
+        if (pathBreakpoints != null) {
+            for (final Breakpoint breakpoint : pathBreakpoints) {
                 if (breakpoint.getLineNumber() == lineNumber) {
                     // breakpoint already exists at given line
                     deleteBreakpoint(activeFile, debugger, breakpoint);
@@ -143,31 +136,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
                                   final Debugger debugger,
                                   final Breakpoint breakpoint) {
         doDeleteBreakpoint(breakpoint);
-
-        debugger.deleteBreakpoint(activeFile, breakpoint.getLineNumber(), new AsyncCallback<Void>() {
-            @Override
-            public void onSuccess(final Void result) {
-            }
-
-            @Override
-            public void onFailure(final Throwable exception) {
-            }
-        });
-    }
-
-    /**
-     * Deletes breakpoints linked to paths from the list and JVM.
-     * Removes breakpoints' marks.
-     */
-    private void deleteBreakpoints(final Set<String> paths) {
-        for (String path : paths) {
-            List<Breakpoint> breakpointsToDelete = this.breakpoints.get(path);
-            if (breakpointsToDelete != null) {
-                for (Breakpoint breakpoint : new ArrayList<Breakpoint>(breakpointsToDelete)) {
-                    deleteBreakpoint(breakpoint.getFile(), debuggerManager.getDebugger(), breakpoint);
-                }
-            }
-        }
+        debugger.deleteBreakpoint(activeFile, breakpoint.getLineNumber());
     }
 
     /**
@@ -181,10 +150,10 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
 
         String path = breakpoint.getPath();
 
-        List<Breakpoint> fileBreakpoints = breakpoints.get(path);
-        if (fileBreakpoints != null) {
-            fileBreakpoints.remove(breakpoint);
-            if (fileBreakpoints.isEmpty()) {
+        List<Breakpoint> pathBreakpoints = breakpoints.get(path);
+        if (pathBreakpoints != null) {
+            pathBreakpoints.remove(breakpoint);
+            if (pathBreakpoints.isEmpty()) {
                 breakpoints.remove(breakpoint.getPath());
             }
         }
@@ -193,57 +162,57 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
     }
 
     /**
+     * Deletes breakpoints linked to paths from the list and JVM.
+     * Removes breakpoints' marks.
+     */
+    private void deleteBreakpoints(final Set<String> paths) {
+        for (String path : paths) {
+            List<Breakpoint> breakpointsToDelete = breakpoints.get(path);
+            if (breakpointsToDelete != null) {
+                for (Breakpoint breakpoint : new ArrayList<>(breakpointsToDelete)) {
+                    deleteBreakpoint(breakpoint.getFile(), debuggerManager.getActiveDebugger(), breakpoint);
+                }
+            }
+        }
+    }
+
+    /**
      * Adds breakpoint to the list and JVM.
      */
     private void addBreakpoint(final VirtualFile activeFile,
                                final Debugger debugger,
                                final int lineNumber) {
-        debugger.addBreakpoint(activeFile, lineNumber, new AsyncCallback<Breakpoint>() {
-            @Override
-            public void onSuccess(final Breakpoint result) {
-                Breakpoint activeBreakpoint = new Breakpoint(result.getType(),
-                                                             result.getLineNumber(),
-                                                             result.getPath(),
-                                                             result.getFile(),
-                                                             true);
-                doAddBreakpoint(activeFile, activeBreakpoint);
-            }
 
-            @Override
-            public void onFailure(final Throwable exception) {
-                Breakpoint inactiveBreakpoint = new Breakpoint(Breakpoint.Type.BREAKPOINT,
-                                                               lineNumber,
-                                                               activeFile.getPath(),
-                                                               activeFile,
-                                                               false);
-                doAddBreakpoint(activeFile, inactiveBreakpoint);
-            }
-        });
-    }
+        String path = activeFile.getPath();
+        Breakpoint breakpoint = new Breakpoint(Type.BREAKPOINT,
+                                               lineNumber,
+                                               activeFile.getPath(),
+                                               activeFile,
+                                               false);
 
-    private void doAddBreakpoint(VirtualFile activeFile, Breakpoint breakpoint) {
-        String path = breakpoint.getPath();
-
-        List<Breakpoint> fileBreakpoints = breakpoints.get(path);
-        if (fileBreakpoints == null) {
-            fileBreakpoints = new ArrayList<Breakpoint>();
-            breakpoints.put(path, fileBreakpoints);
+        List<Breakpoint> pathBreakpoints = breakpoints.get(path);
+        if (pathBreakpoints == null) {
+            pathBreakpoints = new ArrayList<>();
+            breakpoints.put(path, pathBreakpoints);
         }
 
-        fileBreakpoints.add(breakpoint);
+        if (!pathBreakpoints.contains(breakpoint)) {
+            pathBreakpoints.add(breakpoint);
+        }
 
-        final BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(activeFile.getPath());
+        final BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(path);
         if (breakpointRenderer != null) {
-            breakpointRenderer.addBreakpointMark(breakpoint.getLineNumber(), new LineChangeAction() {
+            breakpointRenderer.addBreakpointMark(lineNumber, new LineChangeAction() {
                 @Override
                 public void onLineChange(VirtualFile file, int firstLine, int linesAdded, int linesRemoved) {
                     BreakpointManagerImpl.this.onLineChange(file, firstLine, linesAdded, linesRemoved);
                 }
             });
-            breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), breakpoint.isActive());
+            breakpointRenderer.setBreakpointActive(lineNumber, breakpoint.isActive());
         }
-
         preserveBreakpoints();
+
+        debugger.addBreakpoint(activeFile, lineNumber);
     }
 
     /**
@@ -259,24 +228,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeAllBreakpoints() {
-        LOG.fine("Remove all breakpoints");
-        for (final Entry<String, List<Breakpoint>> entry : this.breakpoints.entrySet()) {
-            final String path = entry.getKey();
-            final List<Breakpoint> pathBreakpoints = entry.getValue();
-
-            removeBreakpointsForPath(path, pathBreakpoints);
-        }
-        breakpoints.clear();
-        preserveBreakpoints();
-    }
-
-    private void removeBreakpointsForPath(final String path, final List<Breakpoint> pathBreakpoints) {
-        LOG.fine("\tRemove all breakpoints for path " + path);
+    private void removeBreakpointsForPath(final List<Breakpoint> pathBreakpoints) {
         for (final Breakpoint breakpoint : pathBreakpoints) {
             BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
             if (breakpointRenderer != null) {
@@ -285,9 +237,6 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<Breakpoint> getBreakpointList() {
         final List<Breakpoint> result = new ArrayList<>();
@@ -297,12 +246,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setCurrentBreakpoint(int lineNumber) {
-        LOG.fine("Mark current breakpoint on line " + lineNumber);
+    private void setCurrentBreakpoint(int lineNumber) {
         removeCurrentBreakpoint();
 
         EditorPartPresenter editor = editorAgent.getActiveEditor();
@@ -346,18 +290,6 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         }
 
         preserveBreakpoints();
-    }
-
-    @Override
-    public boolean isCurrentBreakpoint(int lineNumber) {
-        if (this.currentBreakpoint != null) {
-            EditorPartPresenter editor = editorAgent.getActiveEditor();
-            if (editor != null) {
-                VirtualFile activeFile = editor.getEditorInput().getFile();
-                return activeFile.getPath().equals(currentBreakpoint.getPath()) && lineNumber == currentBreakpoint.getLineNumber();
-            }
-        }
-        return false;
     }
 
     @Nullable
@@ -425,7 +357,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
                                          breakpoint.isActive()));
             }
 
-            Debugger debugger = debuggerManager.getDebugger();
+            Debugger debugger = debuggerManager.getActiveDebugger();
             if (debugger != null) {
                 for (final Breakpoint breakpoint : toRemove) {
                     deleteBreakpoint(file, debugger, breakpoint);
@@ -450,27 +382,6 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
             }
         });
 
-        eventBus.addHandler(DebuggerStateEvent.TYPE, new DebuggerStateEventHandler() {
-            @Override
-            public void onStateChanged(DebuggerStateEvent event) {
-                BreakpointManagerImpl.this.debuggerState = event.getState();
-                if (event.isConnectedState()) {
-                    onDebuggerConnected(event.getDebugger());
-                } else if (event.isDisconnectedState()) {
-                    onDebuggerDisconnected();
-                } else if (event.isInitializedState()) {
-                    onDebugInitialized(event.getDebugger());
-                }
-            }
-        });
-
-        eventBus.addHandler(BreakpointStateEvent.TYPE, new BreakpointStateEventHandler() {
-            @Override
-            public void onStateChanged(BreakpointStateEvent event) {
-                onBreakpointStateChanged(event.getState(), event.getFilePath(), event.getLineNumber());
-            }
-        });
-
         eventBus.addHandler(DeleteProjectEvent.TYPE, new DeleteProjectHandler() {
             @Override
             public void onProjectDeleted(DeleteProjectEvent event) {
@@ -480,7 +391,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
 
                 ProjectConfigDto config = event.getProjectConfig();
                 String path = config.getPath() + "/";
-                deleteBreakpoints(getBreakpointsForPath(path));
+                deleteBreakpoints(getBreakpointPaths(path));
             }
         });
 
@@ -497,7 +408,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
 
                     if (node instanceof FolderReferenceNode) {
                         path += "/";
-                        deleteBreakpoints(getBreakpointsForPath(path));
+                        deleteBreakpoints(getBreakpointPaths(path));
 
                     } else if (node instanceof FileReferenceNode) {
                         deleteBreakpoints(Collections.singleton(path));
@@ -515,7 +426,7 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
 
                 // remove breakpoints which refer to un-existed projects
                 List<Node> projects = event.getNodes();
-                Set<String> pathsToDelete = new HashSet<String>(breakpoints.keySet());
+                Set<String> pathsToDelete = new HashSet<>(breakpoints.keySet());
 
                 for (String breakpointPath : breakpoints.keySet()) {
                     for (Node project : projects) {
@@ -533,9 +444,11 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
     }
 
     /**
-     * @returns pathToFind examples: "/test-spring/", "/test-spring/src/", "/test-spring/src/main/java/Test.java"
+     * @param pathToFind
+     *         examples: "/test-spring/", "/test-spring/src/", "/test-spring/src/main/java/Test.java"
+     * @return set of breakpoint paths which related to pathToFind
      */
-    private Set<String> getBreakpointsForPath(String pathToFind) {
+    private Set<String> getBreakpointPaths(String pathToFind) {
         Set<String> foundPaths = new HashSet<>(breakpoints.size());
         for (Entry<String, List<Breakpoint>> breakpointsForPath : breakpoints.entrySet()) {
             String path = breakpointsForPath.getKey();
@@ -545,139 +458,6 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         }
 
         return foundPaths;
-    }
-
-    /**
-     * VM has changed breakpoint state. Sets respective mark.
-     */
-    private void onBreakpointStateChanged(BreakpointStateEvent.BreakpointState state, String filePath, int lineNumber) {
-        if (state == BreakpointStateEvent.BreakpointState.ACTIVE) {
-            List<Breakpoint> breakpointsForPath = breakpoints.get(filePath);
-            if (breakpointsForPath == null) {
-                return;
-            }
-
-            for (int i = 0; i < breakpointsForPath.size(); i++) {
-                Breakpoint breakpoint = breakpointsForPath.get(i);
-
-                if (breakpoint.getLineNumber() == lineNumber) {
-                    Breakpoint newActiveBreakpoint = new Breakpoint(breakpoint.getType(),
-                                                                    breakpoint.getLineNumber(),
-                                                                    breakpoint.getPath(),
-                                                                    breakpoint.getFile(),
-                                                                    breakpoint.getMessage(),
-                                                                    true);
-                    breakpointsForPath.set(i, newActiveBreakpoint);
-
-                    BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
-                    if (breakpointRenderer != null) {
-                        breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), true);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Debugger has been initialized.
-     * Method adds stored breakpoints.
-     */
-    private void onDebugInitialized(Debugger debugger) {
-        Storage localStorage = Storage.getLocalStorageIfSupported();
-        if (localStorage == null) {
-            return;
-        }
-
-        String data = localStorage.getItem(LOCAL_STORAGE_BREAKPOINTS_KEY);
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-
-        List<BreakpointDto> allDtoBreakpoints = dtoFactory.createListDtoFromJson(data, BreakpointDto.class);
-
-        for (final BreakpointDto dto : allDtoBreakpoints) {
-            VirtualFileInfo virtualFileInfo = VirtualFileInfo.newBuilder()
-                                                             .setPath(dto.getPath())
-                                                             .setMediaType(dto.getFileMediaType())
-                                                             .setProject(new ProjectConfig(dto.getFileProjectConfig()))
-                                                             .build();
-
-            VirtualFile file = new VirtualFileImpl(virtualFileInfo);
-
-            if (dto.getType() == Type.CURRENT) {
-                doSetCurrentBreakpoint(file, dto.getLineNumber());
-            } else {
-                addBreakpoint(file, debugger, dto.getLineNumber());
-            }
-        }
-    }
-
-    /**
-     * Debugger has disconnected from the JVM.
-     * Method marks breakpoint as inactive.
-     */
-    private void onDebuggerDisconnected() {
-        for (Entry<String, List<Breakpoint>> entry : breakpoints.entrySet()) {
-            List<Breakpoint> breakpointsForPath = entry.getValue();
-
-            for (int i = 0; i < breakpointsForPath.size(); i++) {
-                Breakpoint breakpoint = breakpointsForPath.get(i);
-
-                if (breakpoint.isActive()) {
-                    Breakpoint newInactiveBreakpoint = new Breakpoint(breakpoint.getType(),
-                                                                      breakpoint.getLineNumber(),
-                                                                      breakpoint.getPath(),
-                                                                      breakpoint.getFile(),
-                                                                      breakpoint.getMessage(),
-                                                                      false);
-                    breakpointsForPath.set(i, newInactiveBreakpoint);
-
-                    BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
-                    if (breakpointRenderer != null) {
-                        breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), false);
-                    }
-                }
-            }
-        }
-
-        removeCurrentBreakpoint();
-    }
-
-    /**
-     * Debugger has connected to the JVM.
-     * Method adds breakpoints and marks them as active.
-     */
-    private void onDebuggerConnected(Debugger debugger) {
-        for (Entry<String, List<Breakpoint>> entry : breakpoints.entrySet()) {
-            final List<Breakpoint> breakpointsForPath = entry.getValue();
-
-            for (int i = 0; i < breakpointsForPath.size(); i++) {
-                final Breakpoint breakpoint = breakpointsForPath.get(i);
-                final int breakpointNumber = i;
-
-                debugger.addBreakpoint(breakpoint.getFile(), breakpoint.getLineNumber(), new AsyncCallback<Breakpoint>() {
-                    @Override
-                    public void onSuccess(final Breakpoint result) {
-                        Breakpoint newActiveBreakpoint = new Breakpoint(breakpoint.getType(),
-                                                                        breakpoint.getLineNumber(),
-                                                                        breakpoint.getPath(),
-                                                                        breakpoint.getFile(),
-                                                                        breakpoint.getMessage(),
-                                                                        true);
-                        breakpointsForPath.set(breakpointNumber, newActiveBreakpoint);
-
-                        BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
-                        if (breakpointRenderer != null) {
-                            breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), true);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(final Throwable exception) {
-                    }
-                });
-            }
-        }
     }
 
     /**
@@ -744,4 +524,185 @@ public class BreakpointManagerImpl implements BreakpointManager, LineChangeActio
         }
     }
 
+    private void restoreBreakpoints() {
+        Storage localStorage = Storage.getLocalStorageIfSupported();
+        if (localStorage == null) {
+            return;
+        }
+
+        String data = localStorage.getItem(LOCAL_STORAGE_BREAKPOINTS_KEY);
+        if (data == null || data.isEmpty()) {
+            return;
+        }
+
+        List<BreakpointDto> allDtoBreakpoints = dtoFactory.createListDtoFromJson(data, BreakpointDto.class);
+
+        for (final BreakpointDto dto : allDtoBreakpoints) {
+            VirtualFileInfo virtualFileInfo = VirtualFileInfo.newBuilder()
+                                                             .setPath(dto.getPath())
+                                                             .setMediaType(dto.getFileMediaType())
+                                                             .setProject(new ProjectConfig(dto.getFileProjectConfig()))
+                                                             .build();
+
+            VirtualFile file = new VirtualFileImpl(virtualFileInfo);
+
+            if (dto.getType() == Type.CURRENT) {
+                doSetCurrentBreakpoint(file, dto.getLineNumber());
+            }
+        }
+    }
+
+    // Debugger events
+
+    @Override
+    public void onActiveDebuggerChanged(@Nullable Debugger activeDebugger) { }
+
+    @Override
+    public void onDebuggerAttached(DebuggerDescriptor debuggerDescriptor, Promise<Void> connect) {
+        connect.then(new Operation<Void>() {
+            @Override
+            public void apply(Void arg) throws OperationException {
+                reAddBreakpointsToServer();
+            }
+        });
+
+    }
+
+    private void reAddBreakpointsToServer() {
+        Debugger debugger = debuggerManager.getActiveDebugger();
+        if (debugger == null) {
+            return;
+        }
+
+        for (Entry<String, List<Breakpoint>> entry : breakpoints.entrySet()) {
+            final List<Breakpoint> breakpointsForPath = entry.getValue();
+
+            for (int i = 0; i < breakpointsForPath.size(); i++) {
+                final Breakpoint breakpoint = breakpointsForPath.get(i);
+                debugger.addBreakpoint(breakpoint.getFile(), breakpoint.getLineNumber());
+            }
+        }
+    }
+
+    @Override
+    public void onDebuggerDisconnected() {
+        for (Entry<String, List<Breakpoint>> entry : breakpoints.entrySet()) {
+            List<Breakpoint> breakpointsForPath = entry.getValue();
+
+            for (int i = 0; i < breakpointsForPath.size(); i++) {
+                Breakpoint breakpoint = breakpointsForPath.get(i);
+
+                if (breakpoint.isActive()) {
+                    Breakpoint newInactiveBreakpoint = new Breakpoint(breakpoint.getType(),
+                                                                      breakpoint.getLineNumber(),
+                                                                      breakpoint.getPath(),
+                                                                      breakpoint.getFile(),
+                                                                      breakpoint.getMessage(),
+                                                                      false);
+                    breakpointsForPath.set(i, newInactiveBreakpoint);
+
+                    BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
+                    if (breakpointRenderer != null) {
+                        breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), false);
+                    }
+                }
+            }
+        }
+
+        removeCurrentBreakpoint();
+    }
+
+    @Override
+    public void onBreakpointAdded(Breakpoint breakpoint) {
+        String path = breakpoint.getPath();
+        List<Breakpoint> breakpointsForPath = breakpoints.get(path);
+        if (breakpointsForPath == null) {
+            breakpointsForPath = new ArrayList<>();
+            breakpoints.put(path, breakpointsForPath);
+        }
+
+        int i = breakpointsForPath.indexOf(breakpoint);
+        if (i == -1) {
+            breakpointsForPath.add(breakpoint);
+        } else {
+            breakpointsForPath.set(i, breakpoint);
+        }
+
+        BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
+        if (breakpointRenderer != null) {
+            breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), breakpoint.isActive());
+        }
+
+        preserveBreakpoints();
+    }
+
+    @Override
+    public void onBreakpointActivated(String filePath, int lineNumber) {
+        List<Breakpoint> breakpointsForPath = breakpoints.get(filePath);
+        if (breakpointsForPath == null) {
+            return;
+        }
+
+        for (int i = 0; i < breakpointsForPath.size(); i++) {
+            Breakpoint breakpoint = breakpointsForPath.get(i);
+
+            if (breakpoint.getLineNumber() == lineNumber) {
+                Breakpoint newActiveBreakpoint = new Breakpoint(breakpoint.getType(),
+                                                                breakpoint.getLineNumber(),
+                                                                breakpoint.getPath(),
+                                                                breakpoint.getFile(),
+                                                                breakpoint.getMessage(),
+                                                                true);
+                breakpointsForPath.set(i, newActiveBreakpoint);
+
+                BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
+                if (breakpointRenderer != null) {
+                    breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), true);
+                }
+            }
+        }
+
+        preserveBreakpoints();
+    }
+
+    @Override
+    public void onBreakpointDeleted(Breakpoint breakpoint) { }
+
+    @Override
+    public void onAllBreakpointDeleted() {
+        for (Entry<String, List<Breakpoint>> entry : breakpoints.entrySet()) {
+            List<Breakpoint> pathBreakpoints = entry.getValue();
+            removeBreakpointsForPath(pathBreakpoints);
+        }
+        breakpoints.clear();
+        preserveBreakpoints();
+    }
+
+    @Override
+    public void onStepIn() {
+        removeCurrentBreakpoint();
+    }
+
+    @Override
+    public void onStepOut() {
+        removeCurrentBreakpoint();
+    }
+
+    @Override
+    public void onStepOver() {
+        removeCurrentBreakpoint();
+    }
+
+    @Override
+    public void onResume() {
+        removeCurrentBreakpoint();
+    }
+
+    @Override
+    public void onBreakpointStopped(String className, int lineNumber) {
+        setCurrentBreakpoint(lineNumber);
+    }
+
+    @Override
+    public void onValueChanged(List<String> path, String newValue) { }
 }
