@@ -17,8 +17,8 @@ package org.eclipse.che.ide.debug;
  */
 public class DebuggerDescriptor {
 
-    private final String info;
-    private final String address;
+    private String info;
+    private String address;
 
     public DebuggerDescriptor(String info, String address) {
         this.info = info;
@@ -31,5 +31,13 @@ public class DebuggerDescriptor {
 
     public String getAddress() {
         return address;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

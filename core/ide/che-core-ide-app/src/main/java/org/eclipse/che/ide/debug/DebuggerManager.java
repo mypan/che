@@ -91,9 +91,7 @@ public class DebuggerManager implements DebuggerManagerObservable, DebuggerObser
     // Active debugger events
 
     @Override
-    public void onDebuggerDisconnected() {
-        setActiveDebugger(null);
-    }
+    public void onDebuggerDisconnected() { }
 
     @Override
     public void addObserver(DebuggerManagerObserver observer) {
@@ -121,19 +119,19 @@ public class DebuggerManager implements DebuggerManagerObservable, DebuggerObser
     public void onAllBreakpointDeleted() { }
 
     @Override
-    public void onStepIn() { }
+    public void onPreStepIn() { }
 
     @Override
-    public void onStepOut() { }
+    public void onPreStepOut() { }
 
     @Override
-    public void onStepOver() { }
+    public void onPreStepOver() { }
 
     @Override
-    public void onResume() { }
+    public void onPreResume() { }
 
     @Override
-    public void onBreakpointStopped(String className, int lineNumber) { }
+    public void onBreakpointStopped(String filePath, String className, int lineNumber) { }
 
     @Override
     public void onValueChanged(List<String> path, String newValue) { }

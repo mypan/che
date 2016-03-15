@@ -10,35 +10,24 @@
  *******************************************************************************/
 package org.eclipse.che.ide.debug;
 
-import org.eclipse.che.commons.annotation.Nullable;
-
-import java.util.List;
-
 /**
- * Breakpoint manager.
- *
  * @author Anatoliy Bazko
  */
-public interface BreakpointManager extends BreakpointManagerObservable {
+public interface BreakpointManagerObserver {
 
     /**
-     * Toggle / untoggle breakpoint.
+     * Event happens when breakpoint added.
      */
-    void changeBreakpointState(int lineNumber);
+    void onBreakpointAdded(Breakpoint breakpoint);
 
     /**
-     * @return current breakpoint
+     * Event happens when breakpoint deleted.
      */
-    @Nullable
-    Breakpoint getCurrentBreakpoint();
+    void onBreakpointDeleted(Breakpoint breakpoint);
 
     /**
-     * @return all breakpoints
+     * Event happens when all breakpoint deleted.
      */
-    List<Breakpoint> getBreakpointList();
+    void onAllBreakpointDeleted();
 
-    /**
-     * Removes all breakpoints.
-     */
-    void deleteAllBreakpoints();
 }

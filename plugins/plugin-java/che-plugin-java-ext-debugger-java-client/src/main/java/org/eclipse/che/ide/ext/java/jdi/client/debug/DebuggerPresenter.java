@@ -28,17 +28,18 @@ import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.debug.Breakpoint;
 import org.eclipse.che.ide.debug.BreakpointManager;
+import org.eclipse.che.ide.debug.BreakpointManagerObserver;
 import org.eclipse.che.ide.debug.Debugger;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
 import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.debug.DebuggerManagerObserver;
-import org.eclipse.che.ide.ext.java.jdi.shared.Location;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeLocalizationConstant;
 import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeResources;
 import org.eclipse.che.ide.ext.java.jdi.client.fqn.FqnResolver;
 import org.eclipse.che.ide.ext.java.jdi.client.fqn.FqnResolverFactory;
 import org.eclipse.che.ide.ext.java.jdi.client.fqn.FqnResolverObserver;
+import org.eclipse.che.ide.ext.java.jdi.shared.Location;
 import org.eclipse.che.ide.ext.java.jdi.shared.StackFrameDump;
 import org.eclipse.che.ide.ext.java.jdi.shared.Variable;
 import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
@@ -67,6 +68,7 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUC
 @Singleton
 public class DebuggerPresenter extends BasePresenter implements DebuggerView.ActionDelegate,
                                                                 DebuggerManagerObserver,
+                                                                BreakpointManagerObserver,
                                                                 FqnResolverObserver {
     private static final String TITLE = "Debug";
 
@@ -113,6 +115,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
 
         this.fqnResolverFactory.addFqnResolverObserver(this);
         this.debuggerManager.addObserver(this);
+        this.breakpointManager.addObserver(this);
     }
 
     @Override
@@ -216,6 +219,8 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     private void resetStates() {
         variables.clear();
         view.setVariables(variables);
+        view.setVMName("");
+        view.setExecutionPoint(true, null);
         selectedVariable = null;
         executionPoint = null;
     }
@@ -227,11 +232,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
             view.setVMName(debuggerDescriptor.getInfo());
         }
 
-        boolean isCurrentBreakpointExists = breakpointManager.getCurrentBreakpoint() != null;
-        if (isCurrentBreakpointExists) {
-            updateStackFrameDump();
-        }
-
+        updateStackFrameDump();
         if (partStack == null || !partStack.containsPart(this)) {
             workspaceAgent.openPart(this, PartStackType.INFORMATION);
         }
@@ -239,7 +240,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
 
     private void updateStackFrameDump() {
         Debugger debugger = debuggerManager.getActiveDebugger();
-        if (debugger != null) {
+        if (debugger != null && executionPoint != null) {
             Promise<String> promise = debugger.getStackFrameDump();
             promise.then(new Operation<String>() {
                 @Override
@@ -254,7 +255,6 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
 
                     view.setVariables(debuggerVariables);
                     if (!debuggerVariables.isEmpty()) {
-                        // TODO null
                         view.setExecutionPoint(variables.get(0).isExistInformation(), executionPoint);
                     }
 
@@ -313,7 +313,6 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
             public void apply(Void arg) throws OperationException {
                 DebuggerPresenter.this.debuggerDescriptor = debuggerDescriptor;
 
-                notificationManager.notify(constant.debuggerConnectingTitle(address), PROGRESS, true);
                 notification.setTitle(constant.debuggerConnectedTitle());
                 notification.setContent(constant.debuggerConnectedDescription(address));
                 notification.setStatus(SUCCESS);
@@ -337,6 +336,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
         String content = constant.debuggerDisconnectedDescription(address);
         notificationManager.notify(constant.debuggerDisconnectedTitle(), content, SUCCESS, false);
 
+        executionPoint = null;
         debuggerDescriptor = null;
 
         resetStates();
@@ -357,40 +357,40 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     }
 
     @Override
-    public void onAllBreakpointDeleted() {
-        updateBreakPoints();
-    }
+    public void onAllBreakpointDeleted() { updateBreakPoints(); }
 
     @Override
-    public void onStepIn() {
+    public void onPreStepIn() {
         resetStates();
     }
 
     @Override
-    public void onStepOut() {
+    public void onPreStepOut() {
         resetStates();
     }
 
     @Override
-    public void onStepOver() {
+    public void onPreStepOver() {
         resetStates();
     }
 
     @Override
-    public void onResume() {
+    public void onPreResume() {
         resetStates();
     }
 
     @Override
-    public void onBreakpointStopped(String className, int lineNumber) {
+    public void onBreakpointStopped(String filePath, String className, int lineNumber) {
         executionPoint = dtoFactory.createDto(Location.class);
         executionPoint.withClassName(className);
         executionPoint.withLineNumber(lineNumber);
-        showDebuggerPanel();
+        showAndUpdateView();
     }
 
     @Override
-    public void onValueChanged(List<String> path, String newValue) { }
+    public void onValueChanged(List<String> path, String newValue) {
+        updateStackFrameDump();
+    }
 
     @Override
     public void onFqnResolverAdded(FqnResolver fqnResolver) {

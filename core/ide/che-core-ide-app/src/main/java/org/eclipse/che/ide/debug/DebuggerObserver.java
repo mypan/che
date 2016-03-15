@@ -52,27 +52,27 @@ public interface DebuggerObserver {
     /**
      * Event happens on step in.
      */
-    void onStepIn();
+    void onPreStepIn();
 
     /**
      * Event happens on step out.
      */
-    void onStepOut();
+    void onPreStepOut();
 
     /**
      * Event happens on step out.
      */
-    void onStepOver();
+    void onPreStepOver();
 
     /**
      * Event happens when debugger resumed.
      */
-    void onResume();
+    void onPreResume();
 
     /**
      * Event happens when debugger stopped at breakpoint.
      */
-    void onBreakpointStopped(String className, int lineNumber);
+    void onBreakpointStopped(String filePath, String className, int lineNumber);
 
     /**
      * Event happens when value changed.

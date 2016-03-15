@@ -10,7 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.jdi.client.debug;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
+import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
@@ -29,6 +31,7 @@ import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.debug.Breakpoint;
 import org.eclipse.che.ide.debug.Debugger;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
+import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.debug.DebuggerObservable;
 import org.eclipse.che.ide.debug.DebuggerObserver;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -78,8 +81,9 @@ import static org.eclipse.che.ide.ext.java.jdi.shared.DebuggerEvent.STEP;
  */
 public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, DebuggerObservable {
 
-    private static final String            LOCAL_STORAGE_DEBUGGER_KEY = "che-java-debugger";
-    public static final  JsPromise<String> DEBUGGER_NOT_CONNECTED     = Promises.reject(JsPromiseError.create("Debugger is not connected"));
+    private static final String LOCAL_STORAGE_DEBUGGER_KEY = "che-java-debugger";
+
+    public static final JsPromise<String> DEBUGGER_NOT_CONNECTED = Promises.reject(JsPromiseError.create("Debugger is not connected"));
 
     private final List<DebuggerObserver>        observers;
     private final JavaDebuggerServiceClientImpl service;
@@ -89,6 +93,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     private final FqnResolverFactory            fqnResolverFactory;
     private final AppContext                    appContext;
     private final JavaDebuggerFileHandler       javaDebuggerFileHandler;
+    private final DebuggerManager debuggerManager;
 
     /** Channel identifier to receive events from debugger over WebSocket. */
     private String debuggerEventsChannel;
@@ -106,10 +111,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                         DtoFactory dtoFactory,
                         LocalStorageProvider localStorageProvider,
                         MessageBusProvider messageBusProvider,
-                        EventBus eventBus,s
+                        EventBus eventBus,
                         FqnResolverFactory fqnResolverFactory,
                         AppContext appContext,
-                        JavaDebuggerFileHandler javaDebuggerFileHandler) {
+                        JavaDebuggerFileHandler javaDebuggerFileHandler,
+                        DebuggerManager debuggerManager) {
         this.service = service;
         this.dtoFactory = dtoFactory;
         this.localStorageProvider = localStorageProvider;
@@ -117,6 +123,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
         this.fqnResolverFactory = fqnResolverFactory;
         this.appContext = appContext;
         this.javaDebuggerFileHandler = javaDebuggerFileHandler;
+        this.debuggerManager = debuggerManager;
         this.observers = new ArrayList<>();
 
         addHandlers(messageBusProvider);
@@ -133,6 +140,16 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                     service.checkEvents(javaDebuggerInfo.getId(), new AsyncRequestCallback<DebuggerEventList>() {
                         @Override
                         protected void onSuccess(DebuggerEventList result) {
+                            debuggerManager.setActiveDebugger(JavaDebugger.this);
+
+                            String info = javaDebuggerInfo.getVmName() + " " + javaDebuggerInfo.getVmVersion();
+                            String address = javaDebuggerInfo.getHost() + ":" + javaDebuggerInfo.getPort();
+                            DebuggerDescriptor debuggerDescriptor = new DebuggerDescriptor(info, address);
+                            JsPromise<Void> promise = Promises.resolve(null);
+
+                            for (DebuggerObserver observer : observers) {
+                                observer.onDebuggerAttached(debuggerDescriptor, promise);
+                            }
                             startCheckingEvents();
                         }
 
@@ -219,13 +236,30 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                     return;
             }
 
+            final Location fLocation = location;
             if (location != null) {
                 javaDebuggerFileHandler.openFile(resolveFilePathByLocation(location),
                                                  location.getClassName(),
-                                                 location.getLineNumber() - 1);
-                for (DebuggerObserver observer : observers) {
-                    observer.onBreakpointStopped(location.getClassName(), location.getLineNumber() - 1);
-                }
+                                                 location.getLineNumber(),
+                                                 new AsyncCallback<VirtualFile>() {
+                                                     @Override
+                                                     public void onFailure(Throwable caught) {
+                                                         for (DebuggerObserver observer : observers) {
+                                                             observer.onBreakpointStopped(fLocation.getClassName(),
+                                                                                          fLocation.getClassName(),
+                                                                                          fLocation.getLineNumber());
+                                                         }
+                                                     }
+
+                                                     @Override
+                                                     public void onSuccess(VirtualFile result) {
+                                                         for (DebuggerObserver observer : observers) {
+                                                             observer.onBreakpointStopped(result.getPath(),
+                                                                                          fLocation.getClassName(),
+                                                                                          fLocation.getLineNumber());
+                                                         }
+                                                     }
+                                                 });
             }
         }
     }
@@ -433,18 +467,19 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
 
         Promise<JavaDebuggerInfo> connect = service.connect(connectionContext);
 
+        String info = "";
+        String address = connectionContext.getHost() + ":" + connectionContext.getPort();
+        final DebuggerDescriptor debuggerDescriptor = new DebuggerDescriptor(info, address);
+
         Promise<Void> promise = connect.then(new Function<JavaDebuggerInfo, Void>() {
             @Override
             public Void apply(JavaDebuggerInfo arg) throws FunctionException {
+                debuggerDescriptor.setInfo(arg.getVmName() + " " + arg.getVmVersion());
                 return null;
             }
         });
 
-
         for (DebuggerObserver observer : observers) {
-            String info = "";
-            String address = connectionContext.getHost() + ":" + connectionContext.getPort();
-            DebuggerDescriptor debuggerDescriptor = new DebuggerDescriptor(info, address);
             observer.onDebuggerAttached(debuggerDescriptor, promise);
         }
 
@@ -480,6 +515,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                 for (DebuggerObserver observer : observers) {
                     observer.onDebuggerDisconnected();
                 }
+                debuggerManager.setActiveDebugger(null);
             }
         }).catchError(new Operation<PromiseError>() {
             @Override
@@ -488,6 +524,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                 for (DebuggerObserver observer : observers) {
                     observer.onDebuggerDisconnected();
                 }
+                debuggerManager.setActiveDebugger(null);
             }
         });
     }
@@ -495,15 +532,12 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public void stepInto() {
         if (isConnected()) {
+            for (DebuggerObserver observer : observers) {
+                observer.onPreStepIn();
+            }
+
             Promise<Void> promise = service.stepInto(javaDebuggerInfo.getId());
-            promise.then(new Operation<Void>() {
-                @Override
-                public void apply(Void arg) throws OperationException {
-                    for (DebuggerObserver observer : observers) {
-                        observer.onStepIn();
-                    }
-                }
-            }).catchError(new Operation<PromiseError>() {
+            promise.catchError(new Operation<PromiseError>() {
                 @Override
                 public void apply(PromiseError arg) throws OperationException {
                     Log.error(JavaDebugger.class, arg.getCause());
@@ -515,15 +549,12 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public void stepOver() {
         if (isConnected()) {
+            for (DebuggerObserver observer : observers) {
+                observer.onPreStepOver();
+            }
+
             Promise<Void> promise = service.stepOver(javaDebuggerInfo.getId());
-            promise.then(new Operation<Void>() {
-                @Override
-                public void apply(Void arg) throws OperationException {
-                    for (DebuggerObserver observer : observers) {
-                        observer.onStepOver();
-                    }
-                }
-            }).catchError(new Operation<PromiseError>() {
+            promise.catchError(new Operation<PromiseError>() {
                 @Override
                 public void apply(PromiseError arg) throws OperationException {
                     Log.error(JavaDebugger.class, arg.getCause());
@@ -535,15 +566,12 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public void stepOut() {
         if (isConnected()) {
+            for (DebuggerObserver observer : observers) {
+                observer.onPreStepOut();
+            }
+
             Promise<Void> promise = service.stepOut(javaDebuggerInfo.getId());
-            promise.then(new Operation<Void>() {
-                @Override
-                public void apply(Void arg) throws OperationException {
-                    for (DebuggerObserver observer : observers) {
-                        observer.onStepOut();
-                    }
-                }
-            }).catchError(new Operation<PromiseError>() {
+            promise.catchError(new Operation<PromiseError>() {
                 @Override
                 public void apply(PromiseError arg) throws OperationException {
                     Log.error(JavaDebugger.class, arg.getCause());
@@ -555,15 +583,12 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public void resume() {
         if (isConnected()) {
+            for (DebuggerObserver observer : observers) {
+                observer.onPreResume();
+            }
+
             Promise<Void> promise = service.resume(javaDebuggerInfo.getId());
-            promise.then(new Operation<Void>() {
-                @Override
-                public void apply(Void arg) throws OperationException {
-                    for (DebuggerObserver observer : observers) {
-                        observer.onResume();
-                    }
-                }
-            }).catchError(new Operation<PromiseError>() {
+            promise.catchError(new Operation<PromiseError>() {
                 @Override
                 public void apply(PromiseError arg) throws OperationException {
                     Log.error(JavaDebugger.class, arg.getCause());

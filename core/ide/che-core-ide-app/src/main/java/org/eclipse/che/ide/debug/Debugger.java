@@ -52,6 +52,7 @@ public interface Debugger<T extends DebuggerConnectionContext> extends DebuggerO
 
     /**
      * Disconnects from process under debugger.
+     * When debugger is disconnected it should invoke {@link DebuggerManager#setActiveDebugger(Debugger)} with {@code null}.
      */
     void disconnectDebugger();
 

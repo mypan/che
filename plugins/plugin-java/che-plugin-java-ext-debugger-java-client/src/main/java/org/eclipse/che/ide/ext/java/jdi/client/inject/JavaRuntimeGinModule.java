@@ -13,22 +13,19 @@ package org.eclipse.che.ide.ext.java.jdi.client.inject;
 import com.google.gwt.inject.client.AbstractGinModule;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerPresenter;
-import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerToolbar;
-import org.eclipse.che.ide.ext.java.jdi.client.debug.JavaDebugger;
-import org.eclipse.che.ide.ext.java.jdi.client.debug.JavaDebuggerFileHandler;
-import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
-import org.eclipse.che.ide.util.storage.LocalStorageProvider;
-import org.eclipse.che.ide.util.storage.BrowserLocalStorageProviderImpl;
 import org.eclipse.che.ide.api.extension.ExtensionGinModule;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerServiceClient;
-import org.eclipse.che.ide.ext.java.jdi.client.debug.JavaDebuggerServiceClientImpl;
+import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerToolbar;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerView;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerViewImpl;
+import org.eclipse.che.ide.ext.java.jdi.client.debug.JavaDebuggerServiceClientImpl;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.changevalue.ChangeValueView;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.changevalue.ChangeValueViewImpl;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.expression.EvaluateExpressionView;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.expression.EvaluateExpressionViewImpl;
+import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
+import org.eclipse.che.ide.util.storage.BrowserLocalStorageProviderImpl;
+import org.eclipse.che.ide.util.storage.LocalStorageProvider;
 
 /** @author Andrey Plotnikov */
 @ExtensionGinModule
@@ -42,8 +39,8 @@ public class JavaRuntimeGinModule extends AbstractGinModule {
         bind(ChangeValueView.class).to(ChangeValueViewImpl.class).in(Singleton.class);
         bind(LocalStorageProvider.class).to(BrowserLocalStorageProviderImpl.class).in(Singleton.class);
         bind(ToolbarPresenter.class).annotatedWith(DebuggerToolbar.class).to(ToolbarPresenter.class).in(Singleton.class);
-        bind(JavaDebuggerFileHandler.class).in(Singleton.class);
-        bind(JavaDebugger.class).in(Singleton.class);
-        bind(DebuggerPresenter.class).in(Singleton.class);
+//        bind(JavaDebuggerFileHandler.class).in(Singleton.class);
+//        bind(JavaDebugger.class).in(Singleton.class);
+//        bind(DebuggerPresenter.class).in(Singleton.class);
     }
 }

@@ -10,16 +10,15 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.jdi.client.debug;
 
-import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
+import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
@@ -79,9 +78,12 @@ public class JavaDebuggerFileHandler {
         this.projectExplorer = projectExplorer;
     }
 
-    @Nullable
-    public void openFile(List<String> filePaths, String className, final int lineNumber) {
+    public void openFile(final List<String> filePaths,
+                         final String className,
+                         final int lineNumber,
+                         final AsyncCallback<VirtualFile> callback) {
         if (debuggerManager.getActiveDebugger() != debuggerManager.getDebugger(MavenAttributes.MAVEN_ID)) {
+            callback.onFailure(new IllegalArgumentException("Not a java file."));
             return;
         }
 
@@ -95,14 +97,18 @@ public class JavaDebuggerFileHandler {
             openFile(className, filePaths, 0, new AsyncCallback<VirtualFile>() {
                 @Override
                 public void onSuccess(VirtualFile result) {
-                    scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)editorAgent.getActiveEditor(), lineNumber);
+                    scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)editorAgent.getActiveEditor(), lineNumber - 1);
+                    callback.onSuccess(result);
                 }
 
                 @Override
-                public void onFailure(Throwable caught) {}
+                public void onFailure(Throwable caught) {
+                    callback.onFailure(caught);
+                }
             });
         } else {
-            scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)activeEditor, lineNumber);
+            scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)activeEditor, lineNumber - 1);
+            callback.onSuccess(activeFile);
         }
     }
 
