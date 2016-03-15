@@ -81,9 +81,9 @@ import static org.eclipse.che.ide.ext.java.jdi.shared.DebuggerEvent.STEP;
  */
 public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, DebuggerObservable {
 
-    private static final String LOCAL_STORAGE_DEBUGGER_KEY = "che-java-debugger";
+    public static final String LANGUAGE = "java";
 
-    public static final JsPromise<String> DEBUGGER_NOT_CONNECTED = Promises.reject(JsPromiseError.create("Debugger is not connected"));
+    private static final String LOCAL_STORAGE_DEBUGGER_KEY = "che-java-debugger";
 
     private final List<DebuggerObserver>        observers;
     private final JavaDebuggerServiceClientImpl service;
@@ -93,7 +93,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     private final FqnResolverFactory            fqnResolverFactory;
     private final AppContext                    appContext;
     private final JavaDebuggerFileHandler       javaDebuggerFileHandler;
-    private final DebuggerManager debuggerManager;
+    private final DebuggerManager               debuggerManager;
 
     /** Channel identifier to receive events from debugger over WebSocket. */
     private String debuggerEventsChannel;
@@ -101,7 +101,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     private String debuggerDisconnectedChannel;
 
     private JavaDebuggerInfo                       javaDebuggerInfo;
-    private Location currenLocation;
+    private Location                               currentLocation;
     private SubscriptionHandler<DebuggerEventList> debuggerEventsHandler;
     private SubscriptionHandler<Void>              debuggerDisconnectedHandler;
 
@@ -239,7 +239,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
 
             final Location fLocation = location;
             if (location != null) {
-                currenLocation = location;
+                currentLocation = location;
                 javaDebuggerFileHandler.openFile(resolveFilePathByLocation(location),
                                                  location.getClassName(),
                                                  location.getLineNumber(),
@@ -342,7 +342,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public Promise<String> getValue(String variable) {
         if (!isConnected()) {
-            return DEBUGGER_NOT_CONNECTED;
+            return Promises.reject(JsPromiseError.create("Debugger is not connected"));
         }
 
         Promise<Value> promise = service.getValue(javaDebuggerInfo.getId(), dtoFactory.createDtoFromJson(variable, Variable.class));
@@ -358,7 +358,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public Promise<String> getStackFrameDump() {
         if (!isConnected()) {
-            return DEBUGGER_NOT_CONNECTED;
+            return Promises.reject(JsPromiseError.create("Debugger is not connected"));
         }
 
         Promise<StackFrameDump> promise = service.getStackFrameDump(javaDebuggerInfo.getId());
@@ -537,7 +537,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreStepIn();
             }
-            currenLocation = null;
+            currentLocation = null;
 
             Promise<Void> promise = service.stepInto(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -555,7 +555,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreStepOver();
             }
-            currenLocation = null;
+            currentLocation = null;
 
             Promise<Void> promise = service.stepOver(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -573,7 +573,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreStepOut();
             }
-            currenLocation = null;
+            currentLocation = null;
 
             Promise<Void> promise = service.stepOut(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -591,7 +591,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreResume();
             }
-            currenLocation = null;
+            currentLocation = null;
 
             Promise<Void> promise = service.resume(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -609,7 +609,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             return service.evaluateExpression(javaDebuggerInfo.getId(), expression);
         }
 
-        return DEBUGGER_NOT_CONNECTED;
+        return Promises.reject(JsPromiseError.create("Debugger is not connected"));
     }
 
     @Override
@@ -647,7 +647,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
 
     @Override
     public boolean isSuspended() {
-        return isConnected() && currenLocation != null;
+        return isConnected() && currentLocation != null;
     }
 
     @Override

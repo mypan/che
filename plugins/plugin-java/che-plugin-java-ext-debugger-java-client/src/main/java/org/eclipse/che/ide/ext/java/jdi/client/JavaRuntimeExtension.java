@@ -35,7 +35,6 @@ import org.eclipse.che.ide.ext.java.jdi.client.debug.JavaDebugger;
 import org.eclipse.che.ide.ext.java.jdi.client.fqn.FqnResolverFactory;
 import org.eclipse.che.ide.ext.java.jdi.client.fqn.JavaClassFqnResolver;
 import org.eclipse.che.ide.ext.java.jdi.client.fqn.JavaFqnResolver;
-import org.eclipse.che.ide.extension.maven.shared.MavenAttributes;
 import org.eclipse.che.ide.util.input.KeyCodeMap;
 
 import static org.eclipse.che.ide.MimeType.APPLICATION_JAVA_CLASS;
@@ -131,7 +130,7 @@ public class JavaRuntimeExtension {
         DefaultActionGroup runContextGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_RUN_CONTEXT_MENU);
         runContextGroup.add(remoteDebugAction);
 
-        debuggerManager.registeredDebugger(MavenAttributes.MAVEN_ID, javaDebugger);
+        debuggerManager.registeredDebugger(JavaDebugger.LANGUAGE, javaDebugger);
         resolverFactory.addResolver(TEXT_X_JAVA, javaFqnResolver);
         resolverFactory.addResolver("application/java", javaFqnResolver);
         resolverFactory.addResolver(APPLICATION_JAVA_CLASS, javaClassFqnResolver);

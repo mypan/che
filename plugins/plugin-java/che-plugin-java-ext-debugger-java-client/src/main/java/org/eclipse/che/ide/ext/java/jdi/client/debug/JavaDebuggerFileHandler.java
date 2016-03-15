@@ -30,7 +30,6 @@ import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.java.client.project.node.JavaNodeManager;
 import org.eclipse.che.ide.ext.java.client.project.node.jar.JarFileNode;
 import org.eclipse.che.ide.ext.java.shared.JarEntry;
-import org.eclipse.che.ide.extension.maven.shared.MavenAttributes;
 import org.eclipse.che.ide.jseditor.client.document.Document;
 import org.eclipse.che.ide.jseditor.client.text.TextPosition;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPresenter;
@@ -79,7 +78,7 @@ public class JavaDebuggerFileHandler {
                          final String className,
                          final int lineNumber,
                          final AsyncCallback<VirtualFile> callback) {
-        if (debuggerManager.getActiveDebugger() != debuggerManager.getDebugger(MavenAttributes.MAVEN_ID)) {
+        if (debuggerManager.getActiveDebugger() != debuggerManager.getDebugger(JavaDebugger.LANGUAGE)) {
             callback.onFailure(null);
             return;
         }

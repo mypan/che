@@ -40,18 +40,18 @@ public class DebuggerManager implements DebuggerManagerObservable, DebuggerObser
     }
 
     /**
-     * Register new debugger for the given project type ID.
+     * Register new debugger for the given language.
      */
-    public void registeredDebugger(String projectTypeId, Debugger debugger) {
-        debuggers.put(projectTypeId, debugger);
+    public void registeredDebugger(String language, Debugger debugger) {
+        debuggers.put(language, debugger);
     }
 
     /**
-     * Gets {@link Debugger} for the given project type ID.
+     * Gets {@link Debugger} for the given language.
      */
     @Nullable
-    public Debugger getDebugger(String projectTypeId) {
-        return debuggers.get(projectTypeId);
+    public Debugger getDebugger(String language) {
+        return debuggers.get(language);
     }
 
     /**
