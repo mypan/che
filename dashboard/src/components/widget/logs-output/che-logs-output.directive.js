@@ -11,24 +11,23 @@
 'use strict';
 
 /**
- * @ngdoc controller
- * @name help.controller:HelpCtrl
- * @description This class is handling the controller of the help
- * @author Florent Benoit
+ * Defines a directive for Logs output
+ * @author Oleksii Kurinnyi
  */
-
-export class HelpCtrl {
+export class CheLogsOutput {
 
   /**
-   * Default constructor
+   * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor(cheBranding) {
-    'ngInject';
-    this.cheBranding = cheBranding;
-    this.help = function () {
-      return this.cheBranding.getProductHelpPath();
+  constructor() {
+    this.restrict = 'E';
+    this.templateUrl = 'components/widget/logs-output/che-logs-output.html';
+
+    // scope values
+    this.scope = {
+      title: '@cheTitle',
+      text: '@cheText'
     };
   }
 }
-

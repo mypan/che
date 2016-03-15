@@ -14,7 +14,6 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
-import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
@@ -22,8 +21,6 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.event.ActivePartChangedEvent;
-import org.eclipse.che.ide.api.event.ActivePartChangedHandler;
 import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.project.node.HasStorablePath;
 import org.eclipse.che.ide.api.project.node.Node;
@@ -83,7 +80,7 @@ public class JavaDebuggerFileHandler {
                          final int lineNumber,
                          final AsyncCallback<VirtualFile> callback) {
         if (debuggerManager.getActiveDebugger() != debuggerManager.getDebugger(MavenAttributes.MAVEN_ID)) {
-            callback.onFailure(new IllegalArgumentException("Not a java file."));
+            callback.onFailure(null);
             return;
         }
 
@@ -133,34 +130,14 @@ public class JavaDebuggerFileHandler {
         }
 
         projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(filePath)).then(new Operation<Node>() {
-            public HandlerRegistration handlerRegistration;
-
             @Override
             public void apply(final Node node) throws OperationException {
                 if (!(node instanceof FileReferenceNode)) {
                     return;
                 }
 
-                handlerRegistration = eventBus.addHandler(ActivePartChangedEvent.TYPE, new ActivePartChangedHandler() {
-                    @Override
-                    public void onActivePartChanged(ActivePartChangedEvent event) {
-                        if (event.getActivePart() instanceof EditorPartPresenter) {
-                            final VirtualFile openedFile = ((EditorPartPresenter)event.getActivePart()).getEditorInput().getFile();
-                            if (((FileReferenceNode)node).getStorablePath().equals(openedFile.getPath())) {
-                                handlerRegistration.removeHandler();
-                                // give the editor some time to fully render it's view
-                                new Timer() {
-                                    @Override
-                                    public void run() {
-                                        callback.onSuccess((VirtualFile)node);
-                                    }
-                                }.schedule(300);
-                            }
-                        }
-                    }
-                });
+                handleActivateFile((VirtualFile)node, callback);
                 eventBus.fireEvent(new FileEvent((VirtualFile)node, OPEN));
-
             }
         }).catchError(new Operation<PromiseError>() {
             @Override
@@ -183,14 +160,18 @@ public class JavaDebuggerFileHandler {
                                                                        appContext.getCurrentProject().getProjectConfig(),
                                                                        javaNodeManager.getJavaSettingsProvider().getSettings());
 
-        editorAgent.openEditor(jarFileNode, new EditorAgent.OpenEditorCallback() {
+        handleActivateFile(jarFileNode, callback);
+        eventBus.fireEvent(new FileEvent(jarFileNode, OPEN));
+    }
+
+    public void handleActivateFile(final VirtualFile virtualFile, final AsyncCallback<VirtualFile> callback) {
+        editorAgent.openEditor(virtualFile, new EditorAgent.OpenEditorCallback() {
             @Override
             public void onEditorOpened(EditorPartPresenter editor) {
-                // give the editor some time to fully render it's view
                 new Timer() {
                     @Override
                     public void run() {
-                        callback.onSuccess(jarFileNode);
+                        callback.onSuccess(virtualFile);
                     }
                 }.schedule(300);
             }
@@ -200,9 +181,14 @@ public class JavaDebuggerFileHandler {
                 new Timer() {
                     @Override
                     public void run() {
-                        callback.onSuccess(jarFileNode);
+                        callback.onSuccess(virtualFile);
                     }
                 }.schedule(300);
+            }
+
+            @Override
+            public void onInitializationFailed() {
+                callback.onFailure(null);
             }
         });
     }

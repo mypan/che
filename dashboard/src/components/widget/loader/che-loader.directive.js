@@ -11,12 +11,10 @@
 'use strict';
 
 /**
- * @ngdoc directive
- * @name help.directive:HelpWidget
- * @description This class is handling the directive of the help
- * @author Florent Benoit
+ * Defines a directive for Loader
+ * @author Oleksii Kurinnyi
  */
-export class HelpWidget {
+export class CheLoader {
 
   /**
    * Default constructor that is using resource
@@ -24,12 +22,9 @@ export class HelpWidget {
    */
   constructor() {
     this.restrict = 'E';
-    this.templateUrl = 'app/navbar/help/help.html';
-    this.replace = false;
+    this.replace = true;
+    this.template = '<div ng-transclude class="che-loader"></div>';
 
-    this.controller = 'HelpCtrl';
-    this.controllerAs = 'helpCtrl';
-    this.bindToController = true;
+    this.transclude = true;
   }
-
 }
