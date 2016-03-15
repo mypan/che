@@ -94,7 +94,7 @@ public class JavaDebuggerFileHandler {
             openFile(className, filePaths, 0, new AsyncCallback<VirtualFile>() {
                 @Override
                 public void onSuccess(VirtualFile result) {
-                    scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)editorAgent.getActiveEditor(), lineNumber - 1);
+                    scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)editorAgent.getActiveEditor(), lineNumber);
                     callback.onSuccess(result);
                 }
 
@@ -104,7 +104,7 @@ public class JavaDebuggerFileHandler {
                 }
             });
         } else {
-            scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)activeEditor, lineNumber - 1);
+            scrollEditorToExecutionPoint((EmbeddedTextEditorPresenter)activeEditor, lineNumber);
             callback.onSuccess(activeFile);
         }
     }

@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.debug;
 
-import org.eclipse.che.commons.annotation.Nullable;
-
 import java.util.List;
 
 /**
@@ -25,12 +23,6 @@ public interface BreakpointManager extends BreakpointManagerObservable {
      * Toggle / untoggle breakpoint.
      */
     void changeBreakpointState(int lineNumber);
-
-    /**
-     * @return current breakpoint
-     */
-    @Nullable
-    Breakpoint getCurrentBreakpoint();
 
     /**
      * @return all breakpoints

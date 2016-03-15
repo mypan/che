@@ -101,6 +101,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     private String debuggerDisconnectedChannel;
 
     private JavaDebuggerInfo                       javaDebuggerInfo;
+    private Location currenLocation;
     private SubscriptionHandler<DebuggerEventList> debuggerEventsHandler;
     private SubscriptionHandler<Void>              debuggerDisconnectedHandler;
 
@@ -238,6 +239,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
 
             final Location fLocation = location;
             if (location != null) {
+                currenLocation = location;
                 javaDebuggerFileHandler.openFile(resolveFilePathByLocation(location),
                                                  location.getClassName(),
                                                  location.getLineNumber(),
@@ -535,6 +537,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreStepIn();
             }
+            currenLocation = null;
 
             Promise<Void> promise = service.stepInto(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -552,6 +555,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreStepOver();
             }
+            currenLocation = null;
 
             Promise<Void> promise = service.stepOver(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -569,6 +573,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreStepOut();
             }
+            currenLocation = null;
 
             Promise<Void> promise = service.stepOut(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -586,6 +591,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             for (DebuggerObserver observer : observers) {
                 observer.onPreResume();
             }
+            currenLocation = null;
 
             Promise<Void> promise = service.resume(javaDebuggerInfo.getId());
             promise.catchError(new Operation<PromiseError>() {
@@ -637,6 +643,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
     @Override
     public boolean isConnected() {
         return javaDebuggerInfo != null;
+    }
+
+    @Override
+    public boolean isSuspended() {
+        return isConnected() && currenLocation != null;
     }
 
     @Override

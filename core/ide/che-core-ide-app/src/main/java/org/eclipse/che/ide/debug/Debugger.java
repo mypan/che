@@ -105,4 +105,9 @@ public interface Debugger<T extends DebuggerConnectionContext> extends DebuggerO
      * Indicates if debugger is connected.
      */
     boolean isConnected();
+
+    /**
+     * Indicates if debugger is suspended.
+     */
+    boolean isSuspended();
 }

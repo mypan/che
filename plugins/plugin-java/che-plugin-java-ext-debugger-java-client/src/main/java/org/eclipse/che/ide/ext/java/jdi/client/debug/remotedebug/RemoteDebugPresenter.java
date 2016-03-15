@@ -125,7 +125,7 @@ public class RemoteDebugPresenter implements RemoteDebugView.ActionDelegate {
                                                   @Override
                                                   public void accepted() {
                                                   }
-                                              });
+                                              }).show();
             return;
         }
 

@@ -282,15 +282,6 @@ public class BreakpointManagerImpl implements BreakpointManager,
         preserveBreakpoints();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Nullable
-    public Breakpoint getCurrentBreakpoint() {
-        return currentBreakpoint;
-    }
-
     @Override
     public void deleteAllBreakpoints() {
         for (Entry<String, List<Breakpoint>> entry : breakpoints.entrySet()) {

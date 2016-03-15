@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 
 import org.eclipse.che.ide.api.action.Action;
 import org.eclipse.che.ide.api.action.ActionEvent;
-import org.eclipse.che.ide.debug.BreakpointManager;
 import org.eclipse.che.ide.debug.Debugger;
 import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeLocalizationConstant;
@@ -28,16 +27,14 @@ import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeResources;
 public class StepOutAction extends Action {
 
     private final DebuggerManager   debuggerManager;
-    private final BreakpointManager breakpointManager;
 
     @Inject
     public StepOutAction(DebuggerManager debuggerManager,
                          JavaRuntimeLocalizationConstant locale,
-                         JavaRuntimeResources resources, BreakpointManager breakpointManager) {
+                         JavaRuntimeResources resources) {
         super(locale.stepOut(), locale.stepOutDescription(), null, resources.stepOut());
 
         this.debuggerManager = debuggerManager;
-        this.breakpointManager = breakpointManager;
     }
 
     @Override
@@ -51,9 +48,7 @@ public class StepOutAction extends Action {
     @Override
     public void update(ActionEvent e) {
         Debugger debugger = debuggerManager.getActiveDebugger();
-        e.getPresentation().setEnabled(debugger != null
-                                       && debugger.isConnected()
-                                       && breakpointManager.getCurrentBreakpoint() != null);
+        e.getPresentation().setEnabled(debugger != null && debugger.isSuspended());
     }
 
 }

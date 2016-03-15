@@ -97,7 +97,7 @@ public interface DebuggerServiceClient<T extends DebuggerConnectionContext>  {
     Promise<Void> stepOver(@NotNull String id);
 
     /**
-     * Do step return.
+     * Do step out.
      */
     Promise<Void> stepOut(@NotNull String id);
 
