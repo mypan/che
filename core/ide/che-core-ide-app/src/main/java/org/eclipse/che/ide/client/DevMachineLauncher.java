@@ -8,76 +8,89 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.extension.machine.client;
+package org.eclipse.che.ide.client;
 
-import com.google.gwt.core.client.Callback;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.machine.gwt.client.MachineManager;
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
+import org.eclipse.che.api.machine.shared.Constants;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
+import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
-import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.component.WsAgentComponent;
+import org.eclipse.che.ide.util.loging.Log;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.eclipse.che.api.core.model.machine.MachineStatus.CREATING;
 import static org.eclipse.che.api.core.model.machine.MachineStatus.RUNNING;
 
-/** @author Artem Zatsarynnyi */
+/**
+ * @author Artem Zatsarynnyi
+ * @author Dmitry Shnurenko
+ */
 @Singleton
-public class MachineComponent implements WsAgentComponent {
+public class DevMachineLauncher {
 
     private final MachineServiceClient machineServiceClient;
     private final AppContext           appContext;
     private final MachineManager       machineManager;
 
     @Inject
-    public MachineComponent(AppContext appContext,
-                            MachineManager machineManager,
-                            MachineServiceClient machineServiceClient) {
+    public DevMachineLauncher(AppContext appContext,
+                              MachineManager machineManager,
+                              MachineServiceClient machineServiceClient) {
         this.machineServiceClient = machineServiceClient;
         this.appContext = appContext;
         this.machineManager = machineManager;
     }
 
-    @Override
-    public void start(final Callback<WsAgentComponent, Exception> callback) {
-        machineServiceClient.getMachines(appContext.getWorkspace().getId()).then(new Operation<List<MachineDto>>() {
+    public void startDevMachine() {
+        machineServiceClient.getMachines(appContext.getWorkspaceId()).then(new Operation<List<MachineDto>>() {
             @Override
-            public void apply(List<MachineDto> arg) throws OperationException {
-                if (arg.isEmpty()) {
-                    callback.onSuccess(MachineComponent.this);
+            public void apply(List<MachineDto> machines) throws OperationException {
+                if (machines.isEmpty()) {
                     return;
                 }
 
-                for (MachineDto descriptor : arg) {
-                    boolean isDev = descriptor.getConfig().isDev();
-                    MachineStatus status = descriptor.getStatus();
+                for (MachineDto machine : machines) {
+                    boolean isDev = machine.getConfig().isDev();
+                    MachineStatus status = machine.getStatus();
 
                     if (isDev && status == RUNNING) {
-                        callback.onSuccess(MachineComponent.this);
+                        appContext.setWsAgentURL(getWsAgentUrl(machine));
+                        appContext.setDevMachineId(machine.getId());
 
-                        appContext.setDevMachineId(descriptor.getId());
-                        machineManager.onMachineRunning(descriptor.getId());
+                        machineManager.onMachineRunning(machine.getId());
                         break;
                     }
                     if (isDev && status == CREATING) {
-                        callback.onSuccess(MachineComponent.this);
                         break;
                     }
                 }
             }
-        }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError arg) throws OperationException {
-                callback.onFailure(new Exception(arg.getMessage()));
-            }
         });
+    }
+
+    private String getWsAgentUrl(MachineDto devMachine) {
+        Map<String, ServerDto> servers = devMachine.getRuntime().getServers();
+
+        ServerDto serverDto = servers.get(Constants.WS_AGENT_PORT);
+
+        String url = serverDto.getUrl();
+
+        if (Strings.isNullOrEmpty(url)) {
+            String errorMessage = "Ws agent url can not be null";
+            Log.error(getClass(), errorMessage);
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        return url;
     }
 }

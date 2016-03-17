@@ -100,4 +100,8 @@ public interface AppContext {
     String getProjectsRoot();
 
     void setProjectsRoot(String projectsRoot);
+
+    void setWsAgentURL(String wsAgentURL);
+
+    String getWsAgentURL();
 }

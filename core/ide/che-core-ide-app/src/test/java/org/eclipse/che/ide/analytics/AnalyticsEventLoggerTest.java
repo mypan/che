@@ -79,7 +79,7 @@ public class AnalyticsEventLoggerTest {
         doReturn("workspaceId").when(eventLogger).getWorkspace();
 
         verify(eventBus).addHandler(eq(WorkspaceStartedEvent.TYPE), startWorkspaceCaptor.capture());
-        startWorkspaceCaptor.getValue().onWorkspaceStarted(workspace);
+//        startWorkspaceCaptor.getValue().onWorkspaceStarted(workspace);
 
         when(appContext.getWorkspace()).thenReturn(workspace);
         when(workspace.getId()).thenReturn("workspaceId");

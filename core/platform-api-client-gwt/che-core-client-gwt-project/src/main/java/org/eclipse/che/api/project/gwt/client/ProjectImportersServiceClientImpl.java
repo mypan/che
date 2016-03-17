@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.project.gwt.client;
 
+import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.project.shared.dto.ProjectImporterData;
 import org.eclipse.che.ide.MimeType;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
@@ -26,17 +27,20 @@ public class ProjectImportersServiceClientImpl implements ProjectImportersServic
 
     private final String              extPath;
     private final AsyncRequestFactory asyncRequestFactory;
+    private final WsAgentUrlProvider  urlProvider;
 
     @Inject
     public ProjectImportersServiceClientImpl(@Named("cheExtensionPath") String extPath,
+                                             WsAgentUrlProvider urlProvider,
                                              AsyncRequestFactory asyncRequestFactory) {
         this.extPath = extPath;
         this.asyncRequestFactory = asyncRequestFactory;
+        this.urlProvider = urlProvider;
     }
 
     @Override
     public void getProjectImporters(String workspaceId, AsyncRequestCallback<ProjectImporterData> callback) {
-        asyncRequestFactory.createGetRequest(extPath + "/project-importers/" + workspaceId)
+        asyncRequestFactory.createGetRequest(urlProvider.get() + extPath + "/project-importers/" + workspaceId)
                            .header(HTTPHeader.CONTENT_TYPE, MimeType.APPLICATION_JSON)
                            .send(callback);
     }

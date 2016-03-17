@@ -17,7 +17,8 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.analytics.shared.dto.EventParameters;
 import org.eclipse.che.api.user.gwt.client.UserServiceClient;
 import org.eclipse.che.api.user.shared.dto.UserDescriptor;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
+import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
@@ -31,8 +32,6 @@ import org.eclipse.che.ide.websocket.MessageBus;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
 import org.eclipse.che.ide.websocket.events.ConnectionOpenedHandler;
 import org.eclipse.che.ide.websocket.rest.RequestCallback;
-import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
-import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -97,7 +96,7 @@ public class AnalyticsEventLoggerImpl implements AnalyticsEventLoggerExt {
 
         eventBus.addHandler(WorkspaceStartedEvent.TYPE, new WorkspaceStartedHandler() {
             @Override
-            public void onWorkspaceStarted(UsersWorkspaceDto workspace) {
+            public void onWorkspaceStarted(WorkspaceStartedEvent event) {
                 messageBus = messageBusProvider.getMessageBus();
 
                 messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {

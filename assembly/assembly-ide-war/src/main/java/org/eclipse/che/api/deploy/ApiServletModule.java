@@ -14,7 +14,6 @@ import com.google.inject.servlet.ServletModule;
 
 import org.apache.catalina.filters.CorsFilter;
 import org.eclipse.che.api.local.CheGuiceEverrestServlet;
-import org.eclipse.che.api.machine.server.proxy.MachineExtensionProxyServlet;
 import org.eclipse.che.env.local.server.SingleEnvironmentFilter;
 import org.eclipse.che.inject.DynaModule;
 import org.everrest.websockets.WSConnectionTracker;
@@ -52,7 +51,6 @@ public class ApiServletModule extends ServletModule {
 
         bind(SingleEnvironmentFilter.class).in(Singleton.class);
         filter("/*").through(SingleEnvironmentFilter.class);
-        serve("/ext/*").with(MachineExtensionProxyServlet.class);
         serveRegex("^/api((?!(/(ws|eventbus)($|/.*)))/.*)").with(CheGuiceEverrestServlet.class);
         install(new org.eclipse.che.swagger.deploy.BasicSwaggerConfigurationModule());
     }
