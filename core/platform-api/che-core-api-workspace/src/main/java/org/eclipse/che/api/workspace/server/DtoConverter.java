@@ -15,8 +15,6 @@ import org.eclipse.che.api.core.model.machine.Snapshot;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.workspace.Environment;
-import org.eclipse.che.api.core.model.workspace.RuntimeWorkspace;
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.machine.shared.Permissions;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
@@ -49,177 +47,177 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
  */
 public final class DtoConverter {
 
-    /**
-     * Converts {@link UsersWorkspace} to {@link UsersWorkspaceDto}.
-     */
-    public static UsersWorkspaceDto asDto(UsersWorkspace workspace) {
-        return newDto(UsersWorkspaceDto.class).withId(workspace.getId())
-                                              .withStatus(workspace.getStatus())
-                                              .withOwner(workspace.getOwner())
-                                              .withTemporary(workspace.isTemporary())
-                                              .withConfig(asDto(workspace.getConfig()));
-    }
-
-    /**
-     * Converts {@link WorkspaceConfig} to {@link WorkspaceConfigDto}.
-     */
-    public static WorkspaceConfigDto asDto(WorkspaceConfig workspace) {
-        final List<CommandDto> commands = workspace.getCommands()
-                                                   .stream()
-                                                   .map(DtoConverter::asDto)
-                                                   .collect(toList());
-        final List<ProjectConfigDto> projects = workspace.getProjects()
-                                                         .stream()
-                                                         .map(DtoConverter::asDto)
-                                                         .collect(toList());
-        final List<EnvironmentDto> environments = workspace.getEnvironments()
-                                                           .stream()
-                                                           .map(DtoConverter::asDto)
-                                                           .collect(toList());
-
-        return newDto(WorkspaceConfigDto.class).withName(workspace.getName())
-                                               .withDefaultEnv(workspace.getDefaultEnv())
-                                               .withCommands(commands)
-                                               .withProjects(projects)
-                                               .withEnvironments(environments)
-                                               .withDescription(workspace.getDescription())
-                                               .withAttributes(workspace.getAttributes());
-    }
-
-    /**
-     * Converts {@link Command} to {@link CommandDto}.
-     */
-    public static CommandDto asDto(Command command) {
-        return newDto(CommandDto.class).withName(command.getName())
-                                       .withCommandLine(command.getCommandLine())
-                                       .withType(command.getType())
-                                       .withAttributes(command.getAttributes());
-    }
-
-    /**
-     * Convert {@link StackImpl} to {@link StackDto}
-     */
-    public static StackDto asDto(StackImpl stack) {
-        WorkspaceConfigDto workspaceConfigDto = null;
-        if (stack.getWorkspaceConfig() != null) {
-            workspaceConfigDto = asDto(stack.getWorkspaceConfig());
-        }
-
-        StackSourceDto stackSourceDto = null;
-        StackSource source = stack.getSource();
-        if (source != null) {
-            stackSourceDto = newDto(StackSourceDto.class).withType(source.getType()).withOrigin(source.getOrigin());
-        }
-
-        List<StackComponentDto> componentsDto = null;
-        if (stack.getComponents() != null) {
-            componentsDto = stack.getComponents()
-                                 .stream()
-                                 .map(component -> newDto(StackComponentDto.class).withName(component.getName())
-                                                                                  .withVersion(component.getVersion()))
-                                 .collect(toList());
-        }
-
-        PermissionsDescriptor permissionsDescriptor = null;
-        if (stack.getPermissions() != null) {
-            Permissions permissions = stack.getPermissions();
-
-            List<GroupDescriptor> groups = permissions.getGroups()
-                                                      .stream()
-                                                      .map(descriptor -> newDto(GroupDescriptor.class).withName(descriptor.getName())
-                                                                                                      .withAcl(descriptor.getAcl())
-                                                                                                      .withUnit(descriptor.getUnit()))
-                                                      .collect(toList());
-
-            permissionsDescriptor = newDto(PermissionsDescriptor.class).withGroups(groups)
-                                                                       .withUsers(permissions.getUsers());
-        }
-
-        return newDto(StackDto.class).withId(stack.getId())
-                                     .withName(stack.getName())
-                                     .withDescription(stack.getDescription())
-                                     .withCreator(stack.getCreator())
-                                     .withScope(stack.getScope())
-                                     .withTags(stack.getTags())
-                                     .withComponents(componentsDto)
-                                     .withWorkspaceConfig(workspaceConfigDto)
-                                     .withSource(stackSourceDto)
-                                     .withPermissions(permissionsDescriptor);
-    }
-
-    /**
-     * Converts {@link ProjectConfig} to {@link ProjectConfigDto}.
-     */
-    public static ProjectConfigDto asDto(ProjectConfig projectCfg) {
-        final ProjectConfigDto projectConfigDto = newDto(ProjectConfigDto.class).withName(projectCfg.getName())
-                                                                                .withDescription(projectCfg.getDescription())
-                                                                                .withPath(projectCfg.getPath())
-                                                                                .withType(projectCfg.getType())
-                                                                                .withAttributes(projectCfg.getAttributes())
-                                                                                .withMixins(projectCfg.getMixins());
-        if (projectCfg.getModules() != null) {
-            final List<ProjectConfigDto> modules = projectCfg.getModules()
-                                                             .stream()
-                                                             .map(DtoConverter::asDto)
-                                                             .collect(toList());
-            projectConfigDto.withModules(modules);
-        }
-        final SourceStorage source = projectCfg.getSource();
-        if (source != null) {
-            projectConfigDto.withSource(newDto(SourceStorageDto.class).withLocation(source.getLocation())
-                                                                      .withType(source.getType())
-                                                                      .withParameters(source.getParameters()));
-        }
-        return projectConfigDto;
-    }
-
-    //TODO add recipe
-
-    /**
-     * Converts {@link Environment} to {@link EnvironmentDto}.
-     */
-    public static EnvironmentDto asDto(Environment environment) {
-        return newDto(EnvironmentDto.class).withName(environment.getName())
-                                           .withMachineConfigs(environment.getMachineConfigs()
-                                                                                .stream()
-                                                                                .map(org.eclipse.che.api.machine.server.DtoConverter::asDto)
-                                                                                .collect(toList()));
-    }
-
-    /**
-     * Converts {@link RuntimeWorkspace} to {@link RuntimeWorkspaceDto}.
-     */
-    public static RuntimeWorkspaceDto asDto(RuntimeWorkspace workspace) {
-        final RuntimeWorkspaceDto runtimeWorkspaceDto = newDto(RuntimeWorkspaceDto.class).withId(workspace.getId())
-                                                                                         .withStatus(workspace.getStatus())
-                                                                                         .withOwner(workspace.getOwner())
-                                                                                         .withTemporary(workspace.isTemporary())
-                                                                                         .withConfig(asDto(workspace.getConfig()))
-                                                                                         .withActiveEnv(workspace.getActiveEnv())
-                                                                                         .withRootFolder(workspace.getRootFolder());
-        if (workspace.getMachines() != null) {
-            runtimeWorkspaceDto.withMachines(workspace.getMachines()
-                                                      .stream()
-                                                      .map(org.eclipse.che.api.machine.server.DtoConverter::asDto)
-                                                      .collect(toList()));
-        }
-        if (workspace.getDevMachine() != null) {
-            runtimeWorkspaceDto.withDevMachine(org.eclipse.che.api.machine.server.DtoConverter.asDto(workspace.getDevMachine()));
-        }
-        return runtimeWorkspaceDto;
-    }
-
-    public static SnapshotDto asDto(Snapshot snapshot) {
-        return newDto(SnapshotDto.class).withId(snapshot.getId())
-                                        .withCreationDate(snapshot.getCreationDate())
-                                        .withDescription(snapshot.getDescription())
-                                        .withDev(snapshot.isDev())
-                                        .withOwner(snapshot.getOwner())
-                                        .withType(snapshot.getType())
-                                        .withWorkspaceId(snapshot.getWorkspaceId())
-                                        .withEnvName(snapshot.getEnvName())
-                                        .withMachineName(snapshot.getEnvName());
-    }
-
-    private DtoConverter() {}
+//    /**
+//     * Converts {@link UsersWorkspace} to {@link UsersWorkspaceDto}.
+//     */
+//    public static UsersWorkspaceDto asDto(UsersWorkspace workspace) {
+//        return newDto(UsersWorkspaceDto.class).withId(workspace.getId())
+//                                              .withStatus(workspace.getStatus())
+//                                              .withOwner(workspace.getOwner())
+//                                              .withTemporary(workspace.isTemporary())
+//                                              .withConfig(asDto(workspace.getConfig()));
+//    }
+//
+//    /**
+//     * Converts {@link WorkspaceConfig} to {@link WorkspaceConfigDto}.
+//     */
+//    public static WorkspaceConfigDto asDto(WorkspaceConfig workspace) {
+//        final List<CommandDto> commands = workspace.getCommands()
+//                                                   .stream()
+//                                                   .map(DtoConverter::asDto)
+//                                                   .collect(toList());
+//        final List<ProjectConfigDto> projects = workspace.getProjects()
+//                                                         .stream()
+//                                                         .map(DtoConverter::asDto)
+//                                                         .collect(toList());
+//        final List<EnvironmentDto> environments = workspace.getEnvironments()
+//                                                           .stream()
+//                                                           .map(DtoConverter::asDto)
+//                                                           .collect(toList());
+//
+//        return newDto(WorkspaceConfigDto.class).withName(workspace.getName())
+//                                               .withDefaultEnv(workspace.getDefaultEnv())
+//                                               .withCommands(commands)
+//                                               .withProjects(projects)
+//                                               .withEnvironments(environments)
+//                                               .withDescription(workspace.getDescription())
+//                                               .withAttributes(workspace.getAttributes());
+//    }
+//
+//    /**
+//     * Converts {@link Command} to {@link CommandDto}.
+//     */
+//    public static CommandDto asDto(Command command) {
+//        return newDto(CommandDto.class).withName(command.getName())
+//                                       .withCommandLine(command.getCommandLine())
+//                                       .withType(command.getType())
+//                                       .withAttributes(command.getAttributes());
+//    }
+//
+//    /**
+//     * Convert {@link StackImpl} to {@link StackDto}
+//     */
+//    public static StackDto asDto(StackImpl stack) {
+//        WorkspaceConfigDto workspaceConfigDto = null;
+//        if (stack.getWorkspaceConfig() != null) {
+//            workspaceConfigDto = asDto(stack.getWorkspaceConfig());
+//        }
+//
+//        StackSourceDto stackSourceDto = null;
+//        StackSource source = stack.getSource();
+//        if (source != null) {
+//            stackSourceDto = newDto(StackSourceDto.class).withType(source.getType()).withOrigin(source.getOrigin());
+//        }
+//
+//        List<StackComponentDto> componentsDto = null;
+//        if (stack.getComponents() != null) {
+//            componentsDto = stack.getComponents()
+//                                 .stream()
+//                                 .map(component -> newDto(StackComponentDto.class).withName(component.getName())
+//                                                                                  .withVersion(component.getVersion()))
+//                                 .collect(toList());
+//        }
+//
+//        PermissionsDescriptor permissionsDescriptor = null;
+//        if (stack.getPermissions() != null) {
+//            Permissions permissions = stack.getPermissions();
+//
+//            List<GroupDescriptor> groups = permissions.getGroups()
+//                                                      .stream()
+//                                                      .map(descriptor -> newDto(GroupDescriptor.class).withName(descriptor.getName())
+//                                                                                                      .withAcl(descriptor.getAcl())
+//                                                                                                      .withUnit(descriptor.getUnit()))
+//                                                      .collect(toList());
+//
+//            permissionsDescriptor = newDto(PermissionsDescriptor.class).withGroups(groups)
+//                                                                       .withUsers(permissions.getUsers());
+//        }
+//
+//        return newDto(StackDto.class).withId(stack.getId())
+//                                     .withName(stack.getName())
+//                                     .withDescription(stack.getDescription())
+//                                     .withCreator(stack.getCreator())
+//                                     .withScope(stack.getScope())
+//                                     .withTags(stack.getTags())
+//                                     .withComponents(componentsDto)
+//                                     .withWorkspaceConfig(workspaceConfigDto)
+//                                     .withSource(stackSourceDto)
+//                                     .withPermissions(permissionsDescriptor);
+//    }
+//
+//    /**
+//     * Converts {@link ProjectConfig} to {@link ProjectConfigDto}.
+//     */
+//    public static ProjectConfigDto asDto(ProjectConfig projectCfg) {
+//        final ProjectConfigDto projectConfigDto = newDto(ProjectConfigDto.class).withName(projectCfg.getName())
+//                                                                                .withDescription(projectCfg.getDescription())
+//                                                                                .withPath(projectCfg.getPath())
+//                                                                                .withType(projectCfg.getType())
+//                                                                                .withAttributes(projectCfg.getAttributes())
+//                                                                                .withMixins(projectCfg.getMixins());
+//        if (projectCfg.getModules() != null) {
+//            final List<ProjectConfigDto> modules = projectCfg.getModules()
+//                                                             .stream()
+//                                                             .map(DtoConverter::asDto)
+//                                                             .collect(toList());
+//            projectConfigDto.withModules(modules);
+//        }
+//        final SourceStorage source = projectCfg.getSource();
+//        if (source != null) {
+//            projectConfigDto.withSource(newDto(SourceStorageDto.class).withLocation(source.getLocation())
+//                                                                      .withType(source.getType())
+//                                                                      .withParameters(source.getParameters()));
+//        }
+//        return projectConfigDto;
+//    }
+//
+//    //TODO add recipe
+//
+//    /**
+//     * Converts {@link Environment} to {@link EnvironmentDto}.
+//     */
+//    public static EnvironmentDto asDto(Environment environment) {
+//        return newDto(EnvironmentDto.class).withName(environment.getName())
+//                                           .withMachineConfigs(environment.getMachineConfigs()
+//                                                                                .stream()
+//                                                                                .map(org.eclipse.che.api.machine.server.DtoConverter::asDto)
+//                                                                                .collect(toList()));
+//    }
+//
+//    /**
+//     * Converts {@link RuntimeWorkspace} to {@link RuntimeWorkspaceDto}.
+//     */
+//    public static RuntimeWorkspaceDto asDto(RuntimeWorkspace workspace) {
+//        final RuntimeWorkspaceDto runtimeWorkspaceDto = newDto(RuntimeWorkspaceDto.class).withId(workspace.getId())
+//                                                                                         .withStatus(workspace.getStatus())
+//                                                                                         .withOwner(workspace.getOwner())
+//                                                                                         .withTemporary(workspace.isTemporary())
+//                                                                                         .withConfig(asDto(workspace.getConfig()))
+//                                                                                         .withActiveEnv(workspace.getActiveEnv())
+//                                                                                         .withRootFolder(workspace.getRootFolder());
+//        if (workspace.getMachines() != null) {
+//            runtimeWorkspaceDto.withMachines(workspace.getMachines()
+//                                                      .stream()
+//                                                      .map(org.eclipse.che.api.machine.server.DtoConverter::asDto)
+//                                                      .collect(toList()));
+//        }
+//        if (workspace.getDevMachine() != null) {
+//            runtimeWorkspaceDto.withDevMachine(org.eclipse.che.api.machine.server.DtoConverter.asDto(workspace.getDevMachine()));
+//        }
+//        return runtimeWorkspaceDto;
+//    }
+//
+//    public static SnapshotDto asDto(Snapshot snapshot) {
+//        return newDto(SnapshotDto.class).withId(snapshot.getId())
+//                                        .withCreationDate(snapshot.getCreationDate())
+//                                        .withDescription(snapshot.getDescription())
+//                                        .withDev(snapshot.isDev())
+//                                        .withOwner(snapshot.getOwner())
+//                                        .withType(snapshot.getType())
+//                                        .withWorkspaceId(snapshot.getWorkspaceId())
+//                                        .withEnvName(snapshot.getEnvName())
+//                                        .withMachineName(snapshot.getEnvName());
+//    }
+//
+//    private DtoConverter() {}
 }

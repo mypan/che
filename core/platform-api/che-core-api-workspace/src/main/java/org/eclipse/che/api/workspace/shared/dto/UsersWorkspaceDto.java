@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.shared.dto;
 
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.rest.shared.dto.Hyperlinks;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
@@ -18,25 +17,28 @@ import org.eclipse.che.dto.shared.DTO;
 
 import java.util.List;
 
+// TODO refactor CHE-718
+
+
 /**
  * @author andrew00x
  */
 @DTO
-public interface UsersWorkspaceDto extends UsersWorkspace, Hyperlinks {
-
-    @Override
-    WorkspaceConfigDto getConfig();
-
-    UsersWorkspaceDto withConfig(WorkspaceConfigDto config);
-
-    UsersWorkspaceDto withId(String id);
-
-    UsersWorkspaceDto withOwner(String owner);
-
-    UsersWorkspaceDto withStatus(WorkspaceStatus status);
-
-    UsersWorkspaceDto withTemporary(boolean isTemporary);
-
-    @Override
-    UsersWorkspaceDto withLinks(List<Link> links);
+public interface UsersWorkspaceDto extends /*UsersWorkspace*/ Hyperlinks {
+//
+//    @Override
+//    WorkspaceConfigDto getConfig();
+//
+//    UsersWorkspaceDto withConfig(WorkspaceConfigDto config);
+//
+//    UsersWorkspaceDto withId(String id);
+//
+//    UsersWorkspaceDto withOwner(String owner);
+//
+//    UsersWorkspaceDto withStatus(WorkspaceStatus status);
+//
+//    UsersWorkspaceDto withTemporary(boolean isTemporary);
+//
+//    @Override
+//    UsersWorkspaceDto withLinks(List<Link> links);
 }

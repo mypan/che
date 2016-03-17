@@ -70,7 +70,9 @@ import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_UPDATE_STA
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_UPLOAD_ICON;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_ICON;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_DELETE_ICON;
-import static org.eclipse.che.api.workspace.server.DtoConverter.asDto;
+
+// TODO refactor CHE-718
+
 
 /**
  * Defines Stack REST API
@@ -437,7 +439,8 @@ public class StackService extends Service {
             links.add(deleteIcon);
             links.add(getIconLink);
         }
-        return asDto(stack).withLinks(links);
+        return null;
+//        return asDto(stack).withLinks(links);
     }
 
     private void requireNonNull(Object object, String message) throws BadRequestException {

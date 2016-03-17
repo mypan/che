@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
+// TODO refactor CHE-718
+
 /**
  * Default implementation of {@link WorkspaceConfigValidator}.
  *
@@ -59,13 +61,13 @@ public class DefaultWorkspaceConfigValidator implements WorkspaceConfigValidator
                       "latin letters, underscores, dots, dashes and should start and end only with digits, " +
                       "latin letters or underscores");
 
-        //attributes
-        for (String attributeName : config.getAttributes().keySet()) {
-            //attribute name should not be empty and should not start with codenvy
-            checkArgument(attributeName != null && !attributeName.trim().isEmpty() && !attributeName.toLowerCase().startsWith("codenvy"),
-                          "Attribute name '%s' is not valid",
-                          attributeName);
-        }
+//        //attributes
+//        for (String attributeName : config.getAttributes().keySet()) {
+//            //attribute name should not be empty and should not start with codenvy
+//            checkArgument(attributeName != null && !attributeName.trim().isEmpty() && !attributeName.toLowerCase().startsWith("codenvy"),
+//                          "Attribute name '%s' is not valid",
+//                          attributeName);
+//        }
 
         //environments
         checkArgument(!isNullOrEmpty(config.getDefaultEnv()), "Workspace default environment name required");

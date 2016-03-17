@@ -12,14 +12,13 @@ package org.eclipse.che.api.workspace.server.event;
 
 
 import org.eclipse.che.api.core.BadRequestException;
-import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.notification.EventSubscriber;
 import org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent;
 import org.eclipse.che.api.workspace.server.WorkspaceManager;
-import org.eclipse.che.api.workspace.server.model.impl.UsersWorkspaceImpl;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,9 @@ import javax.inject.Singleton;
 
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent.EventType.DESTROYED;
+
+// TODO refactor CHE-718
+
 
 /**
  * The class listens changing of machine status and perform some actions when status is changed.
@@ -51,20 +53,20 @@ public class MachineStateListener implements EventSubscriber<MachineStatusEvent>
 
     @Override
     public void onEvent(MachineStatusEvent event) {
-        String workspaceId = event.getWorkspaceId();
-
-        if (event.isDev() && DESTROYED.equals(event.getEventType())) {
-            try {
-                UsersWorkspaceImpl currentWorkspace = workspaceManager.getWorkspace(workspaceId);
-
-                if (RUNNING.equals(currentWorkspace.getStatus())) {
-                    workspaceManager.stopWorkspace(workspaceId);
-                }
-
-            } catch (NotFoundException | ServerException | BadRequestException exception) {
-                LOG.error(exception.getLocalizedMessage(), exception);
-            }
-        }
+//        String workspaceId = event.getWorkspaceId();
+//
+//        if (event.isDev() && DESTROYED.equals(event.getEventType())) {
+//            try {
+//                WorkspaceImpl currentWorkspace = workspaceManager.getWorkspace(workspaceId);
+//
+//                if (RUNNING.equals(currentWorkspace.getStatus())) {
+//                    workspaceManager.stopWorkspace(workspaceId);
+//                }
+//
+//            } catch (NotFoundException | ServerException | BadRequestException exception) {
+//                LOG.error(exception.getLocalizedMessage(), exception);
+//            }
+//        }
     }
 
     @PostConstruct

@@ -23,6 +23,9 @@ import java.util.Map;
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.MANDATORY;
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
 
+// TODO refactor CHE-718
+
+
 /**
  * @author andrew00x
  */
@@ -74,10 +77,10 @@ public interface WorkspaceConfigDto extends WorkspaceConfig, Hyperlinks {
     void setEnvironments(List<EnvironmentDto> environments);
 
     WorkspaceConfigDto withEnvironments(List<EnvironmentDto> environments);
-
-    @Override
-    @FactoryParameter(obligation = OPTIONAL)
-    Map<String, String> getAttributes();
+//
+//    @Override
+//    @FactoryParameter(obligation = OPTIONAL)
+//    Map<String, String> getAttributes();
 
     void setAttributes(Map<String, String> attributes);
 

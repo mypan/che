@@ -90,6 +90,9 @@ import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_STACK_
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.util.Collections.singletonList;
 
+// TODO refactor CHE-718
+
+
 /**
  * Test for {@link @StackService}
  *
@@ -162,76 +165,76 @@ public class StackServiceTest {
     @InjectMocks
     StackService service;
 
-    @BeforeClass
-    public void setUp() throws IOException, ConflictException {
-        byte[] fileContent = STACK_ID.getBytes();
-        stackIcon = new StackIcon(ICON_MEDIA_TYPE, "image/svg+xml", fileContent);
-        componentsImpl = Collections.singletonList(new StackComponentImpl(COMPONENT_NAME, COMPONENT_VERSION));
-        stackSourceImpl = new StackSourceImpl(SOURCE_TYPE, SOURCE_ORIGIN);
-        CommandImpl command = new CommandImpl(COMMAND_NAME, COMMAND_LINE, COMMAND_TYPE);
-        MachineSourceImpl machineSource = new MachineSourceImpl(MACHINE_SOURCE_TYPE, MACHINE_SOURCE_LOCATION);
-        int limitMemory = 1000;
-        LimitsImpl limits = new LimitsImpl(limitMemory);
-        MachineConfigImpl machineConfig = new MachineConfigImpl(IS_DEV,
-                                                                MACHINE_CONFIG_NAME,
-                                                                MACHINE_TYPE,
-                                                                machineSource,
-                                                                limits,
-                                                                Arrays.asList(new ServerConfImpl("ref1", "8080", "https"),
-                                                                              new ServerConfImpl("ref2", "9090/udp", "someprotocol")),
-                                                                Collections.singletonMap("key1", "value1"));
-        EnvironmentImpl environment = new EnvironmentImpl(ENVIRONMENT_NAME, null, Collections.singletonList(machineConfig));
-
-        WorkspaceConfigImpl workspaceConfig = WorkspaceConfigImpl.builder()
-                                                                 .setName(WORKSPACE_CONFIG_NAME)
-                                                                 .setDefaultEnv(DEF_ENVIRONMENT_NAME)
-                                                                 .setCommands(Collections.singletonList(command))
-                                                                 .setEnvironments(Collections.singletonList(environment))
-                                                                 .build();
-
-        stackSourceDto = newDto(StackSourceDto.class).withType(SOURCE_TYPE).withOrigin(SOURCE_ORIGIN);
-        StackComponentDto stackComponentDto = newDto(StackComponentDto.class).withName(COMPONENT_NAME).withVersion(COMPONENT_VERSION);
-        componentsDto = Collections.singletonList(stackComponentDto);
-
-        stackDto = DtoFactory.getInstance().createDto(StackDto.class).withId(STACK_ID)
-                             .withName(NAME)
-                             .withDescription(DESCRIPTION)
-                             .withScope(SCOPE)
-                             .withCreator(CREATOR)
-                             .withTags(tags)
-                             .withSource(stackSourceDto)
-                             .withComponents(componentsDto);
-
-        stackImpl = StackImpl.builder().setId(STACK_ID)
-                             .setName(NAME)
-                             .setDescription(DESCRIPTION)
-                             .setScope(SCOPE)
-                             .setCreator(CREATOR)
-                             .setTags(tags)
-                             .setSource(stackSourceImpl)
-                             .setComponents(componentsImpl)
-                             .setWorkspaceConfig(workspaceConfig)
-                             .setStackIcon(stackIcon)
-                             .build();
-
-        foreignStack = StackImpl.builder().setId(STACK_ID)
-                                .setName(NAME)
-                                .setDescription(DESCRIPTION)
-                                .setScope(SCOPE)
-                                .setCreator(FOREIGN_CREATOR)
-                                .setTags(tags)
-                                .setSource(stackSourceImpl)
-                                .setComponents(componentsImpl)
-                                .setWorkspaceConfig(workspaceConfig)
-                                .setStackIcon(stackIcon)
-                                .build();
-
-        Map<String, List<String>> userPermission = new HashMap<>();
-        userPermission.put(USER_ID, asList("read", "write"));
-        GroupDescriptor group = newDto(GroupDescriptor.class).withName("user").withAcl(asList("read", "write", "search"));
-        List<GroupDescriptor> groupPermission = singletonList(group);
-        permissionsDescriptor = newDto(PermissionsDescriptor.class).withUsers(userPermission).withGroups(groupPermission);
-    }
+//    @BeforeClass
+//    public void setUp() throws IOException, ConflictException {
+//        byte[] fileContent = STACK_ID.getBytes();
+//        stackIcon = new StackIcon(ICON_MEDIA_TYPE, "image/svg+xml", fileContent);
+//        componentsImpl = Collections.singletonList(new StackComponentImpl(COMPONENT_NAME, COMPONENT_VERSION));
+//        stackSourceImpl = new StackSourceImpl(SOURCE_TYPE, SOURCE_ORIGIN);
+//        CommandImpl command = new CommandImpl(COMMAND_NAME, COMMAND_LINE, COMMAND_TYPE);
+//        MachineSourceImpl machineSource = new MachineSourceImpl(MACHINE_SOURCE_TYPE, MACHINE_SOURCE_LOCATION);
+//        int limitMemory = 1000;
+//        LimitsImpl limits = new LimitsImpl(limitMemory);
+//        MachineConfigImpl machineConfig = new MachineConfigImpl(IS_DEV,
+//                                                                MACHINE_CONFIG_NAME,
+//                                                                MACHINE_TYPE,
+//                                                                machineSource,
+//                                                                limits,
+////                                                                Arrays.asList(new ServerConfImpl("ref1", "8080", "https"),
+////                                                                              new ServerConfImpl("ref2", "9090/udp", "someprotocol")),
+//                                                                Collections.singletonMap("key1", "value1"));
+//        EnvironmentImpl environment = new EnvironmentImpl(ENVIRONMENT_NAME, null, Collections.singletonList(machineConfig));
+//
+//        WorkspaceConfigImpl workspaceConfig = WorkspaceConfigImpl.builder()
+//                                                                 .setName(WORKSPACE_CONFIG_NAME)
+//                                                                 .setDefaultEnv(DEF_ENVIRONMENT_NAME)
+//                                                                 .setCommands(Collections.singletonList(command))
+//                                                                 .setEnvironments(Collections.singletonList(environment))
+//                                                                 .build();
+//
+//        stackSourceDto = newDto(StackSourceDto.class).withType(SOURCE_TYPE).withOrigin(SOURCE_ORIGIN);
+//        StackComponentDto stackComponentDto = newDto(StackComponentDto.class).withName(COMPONENT_NAME).withVersion(COMPONENT_VERSION);
+//        componentsDto = Collections.singletonList(stackComponentDto);
+//
+//        stackDto = DtoFactory.getInstance().createDto(StackDto.class).withId(STACK_ID)
+//                             .withName(NAME)
+//                             .withDescription(DESCRIPTION)
+//                             .withScope(SCOPE)
+//                             .withCreator(CREATOR)
+//                             .withTags(tags)
+//                             .withSource(stackSourceDto)
+//                             .withComponents(componentsDto);
+//
+//        stackImpl = StackImpl.builder().setId(STACK_ID)
+//                             .setName(NAME)
+//                             .setDescription(DESCRIPTION)
+//                             .setScope(SCOPE)
+//                             .setCreator(CREATOR)
+//                             .setTags(tags)
+//                             .setSource(stackSourceImpl)
+//                             .setComponents(componentsImpl)
+//                             .setWorkspaceConfig(workspaceConfig)
+//                             .setStackIcon(stackIcon)
+//                             .build();
+//
+//        foreignStack = StackImpl.builder().setId(STACK_ID)
+//                                .setName(NAME)
+//                                .setDescription(DESCRIPTION)
+//                                .setScope(SCOPE)
+//                                .setCreator(FOREIGN_CREATOR)
+//                                .setTags(tags)
+//                                .setSource(stackSourceImpl)
+//                                .setComponents(componentsImpl)
+//                                .setWorkspaceConfig(workspaceConfig)
+//                                .setStackIcon(stackIcon)
+//                                .build();
+//
+//        Map<String, List<String>> userPermission = new HashMap<>();
+//        userPermission.put(USER_ID, asList("read", "write"));
+//        GroupDescriptor group = newDto(GroupDescriptor.class).withName("user").withAcl(asList("read", "write", "search"));
+//        List<GroupDescriptor> groupPermission = singletonList(group);
+//        permissionsDescriptor = newDto(PermissionsDescriptor.class).withUsers(userPermission).withGroups(groupPermission);
+//    }
 
     @BeforeMethod
     public void setUpUriInfo() throws NoSuchFieldException, IllegalAccessException {
