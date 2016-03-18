@@ -22,13 +22,14 @@ import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFactory;
 import org.eclipse.che.ide.extension.machine.client.perspective.widgets.machine.appliance.server.Server;
-import org.eclipse.che.ide.util.Config;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.eclipse.che.ide.client.DevMachineLauncher.PATH_TO_WS_AGENT;
 
 /**
  * The class which describes machine entity. The class is wrapper of MachineDescriptor.
@@ -98,7 +99,7 @@ public class Machine {
 
         boolean isSecureConnection = Window.Location.getProtocol().equals("https:");
 
-        return (isSecureConnection ? "wss" : "ws") + extUrl + Config.getCheExtensionPath() + "/ws";
+        return (isSecureConnection ? "wss" : "ws") + extUrl + PATH_TO_WS_AGENT + "/ws";
     }
 
     /**

@@ -12,7 +12,6 @@ package org.eclipse.che.ide.actions;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
@@ -43,8 +42,7 @@ public class DownloadItemAction extends Action {
     private final WsAgentUrlProvider       urlProvider;
 
     @Inject
-    public DownloadItemAction(@Named("cheExtensionPath") String extPath,
-                              AppContext appContext,
+    public DownloadItemAction(AppContext appContext,
                               CoreLocalizationConstant locale,
                               AnalyticsEventLogger eventLogger,
                               DownloadContainer downloadContainer,
@@ -56,7 +54,7 @@ public class DownloadItemAction extends Action {
         this.projectExplorer = projectExplorer;
         this.urlProvider = urlProvider;
 
-        BASE_URL = extPath + "/project/" + appContext.getWorkspace().getId() + "/export/";
+        BASE_URL = "/project/" + appContext.getWorkspace().getId() + "/export/";
     }
 
     /** {@inheritDoc} */

@@ -109,7 +109,6 @@ public class LocalZipImporterPagePresenterTest {
                                                       dtoFactory,
                                                       locale,
                                                       appContext,
-                                                      "extPath",
                                                       eventBus,
                                                       vfsServiceClient,
                                                       projectServiceClient,

@@ -17,7 +17,6 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
@@ -58,7 +57,6 @@ public class WsAgentStateController implements ConnectionOpenedHandler, Connecti
     private final InitialLoadingInfo  initialLoadingInfo;
     private final LoaderPresenter     loader;
     private final AsyncRequestFactory asyncRequestFactory;
-    private final String              extPath;
     private final WsAgentUrlProvider  urlProvider;
 
     //not used now added it for future if it we will have possibility check that service available for client call
@@ -74,14 +72,12 @@ public class WsAgentStateController implements ConnectionOpenedHandler, Connecti
                                   LoaderPresenter loader,
                                   MessageBusProvider messageBusProvider,
                                   AsyncRequestFactory asyncRequestFactory,
-                                  @Named("cheExtensionPath") String extPath,
                                   InitialLoadingInfo initialLoadingInfo,
                                   WsAgentUrlProvider urlProvider) {
         this.loader = loader;
         this.eventBus = eventBus;
         this.messageBusProvider = messageBusProvider;
         this.asyncRequestFactory = asyncRequestFactory;
-        this.extPath = extPath;
         this.initialLoadingInfo = initialLoadingInfo;
         this.availableServices = new ArrayList<>();
         this.urlProvider = urlProvider;
@@ -167,7 +163,7 @@ public class WsAgentStateController implements ConnectionOpenedHandler, Connecti
      * Goto checking HTTP connection via getting all registered REST Services
      */
     private void checkHttpConnection() {
-        String url = urlProvider.get() + extPath + '/';
+        String url = urlProvider.get() + '/';
         asyncRequestFactory.createGetRequest(url).send(new AsyncRequestCallback<String>(new StringUnmarshaller()) {
             @Override
             protected void onSuccess(String result) {

@@ -32,7 +32,6 @@ import org.eclipse.che.ide.rest.AsyncRequestLoader;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 
-import javax.inject.Named;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -67,14 +66,13 @@ public class GitHubClientServiceImpl implements GitHubClientService {
     private final WsAgentUrlProvider     urlProvider;
 
     @Inject
-    protected GitHubClientServiceImpl(@Named("cheExtensionPath") String extPath,
-                                      LoaderFactory loaderFactory,
+    protected GitHubClientServiceImpl(LoaderFactory loaderFactory,
                                       AsyncRequestFactory asyncRequestFactory,
                                       AppContext appContext,
                                       DtoUnmarshallerFactory dtoUnmarshallerFactory,
                                       WsAgentUrlProvider urlProvider) {
         this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
-        this.baseUrl = extPath + "/github/" + appContext.getWorkspaceId();
+        this.baseUrl = "/github/" + appContext.getWorkspaceId();
         this.loader = loaderFactory.newLoader();
         this.asyncRequestFactory = asyncRequestFactory;
         this.urlProvider = urlProvider;

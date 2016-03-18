@@ -12,7 +12,6 @@ package org.eclipse.che.ide.ext.java.jdi.client.debug;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
@@ -51,8 +50,7 @@ public class DebuggerServiceClientImpl implements DebuggerServiceClient {
     private final WsAgentUrlProvider              urlProvider;
 
     @Inject
-    protected DebuggerServiceClientImpl(@Named("cheExtensionPath") String extPath,
-                                        AppContext appContext,
+    protected DebuggerServiceClientImpl(AppContext appContext,
                                         LoaderFactory loaderFactory,
                                         AsyncRequestFactory asyncRequestFactory,
                                         JavaRuntimeLocalizationConstant localizationConstant,
@@ -60,7 +58,7 @@ public class DebuggerServiceClientImpl implements DebuggerServiceClient {
         this.loaderFactory = loaderFactory;
         this.asyncRequestFactory = asyncRequestFactory;
         this.localizationConstant = localizationConstant;
-        this.baseUrl = extPath + "/debug-java/" + appContext.getWorkspaceId();
+        this.baseUrl = "/debug-java/" + appContext.getWorkspaceId();
         this.urlProvider = urlProvider;
     }
 

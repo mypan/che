@@ -12,7 +12,6 @@ package org.eclipse.che.ide.ext.java.client.documentation;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -32,7 +31,6 @@ public class QuickDocPresenter implements QuickDocumentation, QuickDocView.Actio
 
     private final QuickDocView       view;
     private final AppContext         appContext;
-    private final String             caContext;
     private final String             workspaceId;
     private final EditorAgent        editorAgent;
     private final WsAgentUrlProvider urlProvider;
@@ -40,12 +38,10 @@ public class QuickDocPresenter implements QuickDocumentation, QuickDocView.Actio
     @Inject
     public QuickDocPresenter(QuickDocView view,
                              AppContext appContext,
-                             @Named("cheExtensionPath") String caContext,
                              EditorAgent editorAgent,
                              WsAgentUrlProvider urlProvider) {
         this.view = view;
         this.appContext = appContext;
-        this.caContext = caContext;
         this.workspaceId = appContext.getWorkspaceId();
         this.editorAgent = editorAgent;
         this.urlProvider = urlProvider;
@@ -66,7 +62,7 @@ public class QuickDocPresenter implements QuickDocumentation, QuickDocView.Actio
         EmbeddedTextEditorPresenter editor = ((EmbeddedTextEditorPresenter)activeEditor);
         int offset = editor.getCursorOffset();
         final PositionConverter.PixelCoordinates coordinates = editor.getPositionConverter().offsetToPixel(offset);
-        view.show(urlProvider.get() + caContext + "/jdt/" + workspaceId + "/javadoc/find?fqn=" +
+        view.show(urlProvider.get() + "/jdt/" + workspaceId + "/javadoc/find?fqn=" +
                   JavaSourceFolderUtil.getFQNForFile(editor.getEditorInput().getFile()) + "&projectpath=" +
                   appContext.getCurrentProject().getProjectConfig().getPath() + "&offset=" + offset, coordinates.getX(),
                   coordinates.getY());

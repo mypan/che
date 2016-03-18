@@ -18,29 +18,25 @@ import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.HTTPHeader;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * @author Vitaly Parfonov
  */
 public class ProjectImportersServiceClientImpl implements ProjectImportersServiceClient {
 
-    private final String              extPath;
     private final AsyncRequestFactory asyncRequestFactory;
     private final WsAgentUrlProvider  urlProvider;
 
     @Inject
-    public ProjectImportersServiceClientImpl(@Named("cheExtensionPath") String extPath,
-                                             WsAgentUrlProvider urlProvider,
+    public ProjectImportersServiceClientImpl(WsAgentUrlProvider urlProvider,
                                              AsyncRequestFactory asyncRequestFactory) {
-        this.extPath = extPath;
         this.asyncRequestFactory = asyncRequestFactory;
         this.urlProvider = urlProvider;
     }
 
     @Override
     public void getProjectImporters(String workspaceId, AsyncRequestCallback<ProjectImporterData> callback) {
-        asyncRequestFactory.createGetRequest(urlProvider.get() + extPath + "/project-importers/" + workspaceId)
+        asyncRequestFactory.createGetRequest(urlProvider.get() + "/project-importers/" + workspaceId)
                            .header(HTTPHeader.CONTENT_TYPE, MimeType.APPLICATION_JSON)
                            .send(callback);
     }

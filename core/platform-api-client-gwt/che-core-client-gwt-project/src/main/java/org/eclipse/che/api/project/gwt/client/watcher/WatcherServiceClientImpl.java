@@ -12,7 +12,6 @@ package org.eclipse.che.api.project.gwt.client.watcher;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
@@ -33,17 +32,13 @@ import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newProm
 final class WatcherServiceClientImpl implements WatcherServiceClient {
 
     private final AsyncRequestFactory asyncRequestFactory;
-    private final String              baseUrl;
     private final WsAgentUrlProvider  urlProvider;
 
     @Inject
-    public WatcherServiceClientImpl(@Named("cheExtensionPath") String extPath,
-                                    AsyncRequestFactory asyncRequestFactory,
+    public WatcherServiceClientImpl(AsyncRequestFactory asyncRequestFactory,
                                     WsAgentUrlProvider urlProvider) {
         this.asyncRequestFactory = asyncRequestFactory;
         this.urlProvider = urlProvider;
-
-        this.baseUrl = extPath + "/watcher/";
     }
 
     /** {@inheritDoc} */
@@ -52,7 +47,7 @@ final class WatcherServiceClientImpl implements WatcherServiceClient {
         return newPromise(new AsyncPromiseHelper.RequestCall<Void>() {
             @Override
             public void makeCall(AsyncCallback<Void> callback) {
-                String url = urlProvider.get() + baseUrl + workspaceId + "/register";
+                String url = urlProvider.get() + "/watcher/" + workspaceId + "/register";
 
                 asyncRequestFactory.createGetRequest(url).send(newCallback(callback));
             }

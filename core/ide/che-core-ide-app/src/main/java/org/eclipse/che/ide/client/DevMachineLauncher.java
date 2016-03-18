@@ -39,6 +39,8 @@ import static org.eclipse.che.api.core.model.machine.MachineStatus.RUNNING;
 @Singleton
 public class DevMachineLauncher {
 
+    public static final String PATH_TO_WS_AGENT = "/ide/ext";
+
     private final MachineServiceClient machineServiceClient;
     private final AppContext           appContext;
     private final MachineManager       machineManager;
@@ -99,7 +101,7 @@ public class DevMachineLauncher {
             throw new IllegalArgumentException(errorMessage);
         }
 
-        return url;
+        return url + PATH_TO_WS_AGENT;
     }
 
     interface MachineStartedCallback {

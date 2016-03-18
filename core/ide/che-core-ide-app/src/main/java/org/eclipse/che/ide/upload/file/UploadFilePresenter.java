@@ -12,7 +12,6 @@ package org.eclipse.che.ide.upload.file;
 
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
@@ -37,7 +36,6 @@ import java.util.List;
 public class UploadFilePresenter implements UploadFileView.ActionDelegate {
 
     private final UploadFileView           view;
-    private final String                   restContext;
     private final String                   workspaceId;
     private final EventBus                 eventBus;
     private final NotificationManager      notificationManager;
@@ -47,15 +45,12 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
 
     @Inject
     public UploadFilePresenter(UploadFileView view,
-                               @Named("cheExtensionPath") String restContext,
                                AppContext appContext,
                                EventBus eventBus,
                                NotificationManager notificationManager,
                                ProjectExplorerPresenter projectExplorer,
                                CoreLocalizationConstant locale,
                                WsAgentUrlProvider urlProvider) {
-
-        this.restContext = restContext;
         this.workspaceId = appContext.getWorkspace().getId();
         this.eventBus = eventBus;
         this.view = view;
@@ -99,7 +94,7 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
     @Override
     public void onUploadClicked() {
         view.setEncoding(FormPanel.ENCODING_MULTIPART);
-        view.setAction(urlProvider.get() + restContext + "/project/" + workspaceId + "/uploadfile"
+        view.setAction(urlProvider.get() + "/project/" + workspaceId + "/uploadfile"
                        + ((HasStorablePath)getResourceBasedNode()).getStorablePath());
         view.submit();
     }

@@ -12,7 +12,6 @@ package org.eclipse.che.api.project.gwt.client;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentStateController;
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
@@ -70,17 +69,13 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     private final DtoUnmarshallerFactory dtoUnmarshaller;
     private final WsAgentUrlProvider     urlProvider;
 
-    private final String extPath;
-
     @Inject
     protected ProjectServiceClientImpl(WsAgentStateController wsAgentStateController,
                                        LoaderFactory loaderFactory,
                                        AsyncRequestFactory asyncRequestFactory,
                                        DtoFactory dtoFactory,
                                        DtoUnmarshallerFactory dtoUnmarshaller,
-                                       @Named("cheExtensionPath") String extPath,
                                        WsAgentUrlProvider urlProvider) {
-        this.extPath = extPath;
         this.wsAgentStateController = wsAgentStateController;
         this.loaderFactory = loaderFactory;
         this.asyncRequestFactory = asyncRequestFactory;
@@ -91,7 +86,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getProjects(String workspaceId, boolean includeAttributes, AsyncRequestCallback<List<ProjectConfigDto>> callback) {
-        String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "?includeAttributes=" + includeAttributes;
+        String requestUrl = urlProvider.get() + "/project/" + workspaceId + "?includeAttributes=" + includeAttributes;
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting projects..."))
@@ -110,7 +105,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getProjectsInSpecificWorkspace(String wsId, AsyncRequestCallback<List<ProjectConfigDto>> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + wsId;
+        final String requestUrl = urlProvider.get() + "/project/" + wsId;
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting projects..."))
@@ -122,7 +117,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
                                                String srcProjectPath,
                                                String newNameForProject,
                                                AsyncRequestCallback<String> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/vfs/" + workspaceId + "/v2/clone" + "?srcVfsId=" + workspaceId +
+        final String requestUrl = urlProvider.get() + "/vfs/" + workspaceId + "/v2/clone" + "?srcVfsId=" + workspaceId +
                                   "&srcPath=" + srcProjectPath +
                                   "&parentPath=/" +
                                   "&name=" + newNameForProject;
@@ -135,7 +130,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getProject(String workspaceId, String path, AsyncRequestCallback<ProjectConfigDto> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting project..."))
@@ -144,7 +139,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public Promise<ProjectConfigDto> getProject(String workspaceId, String path) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + normalizePath(path);
         return asyncRequestFactory.createGetRequest(requestUrl)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
                                   .loader(loaderFactory.newLoader("Getting project..."))
@@ -153,7 +148,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getItem(String workspaceId, String path, AsyncRequestCallback<ItemReference> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/item" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/item" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting item..."))
@@ -165,7 +160,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
                               String name,
                               ProjectConfigDto projectConfig,
                               AsyncRequestCallback<ProjectConfigDto> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "?name=" + name;
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "?name=" + name;
         asyncRequestFactory.createPostRequest(requestUrl, projectConfig)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Creating project..."))
@@ -177,7 +172,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
                                 String path,
                                 String projectType,
                                 AsyncRequestCallback<Map<String, List<String>>> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/estimate" + normalizePath(path)
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/estimate" + normalizePath(path)
                                   + "?type=" + projectType;
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
@@ -187,7 +182,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void resolveSources(String workspaceId, String path, AsyncRequestCallback<List<SourceEstimation>> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/resolve" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/resolve" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Resolving sources..."))
@@ -196,7 +191,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public Promise<List<SourceEstimation>> resolveSources(String workspaceId, String path) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/resolve" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/resolve" + normalizePath(path);
         return asyncRequestFactory.createGetRequest(requestUrl)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
                                   .loader(loaderFactory.newLoader("Resolving sources..."))
@@ -206,7 +201,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getModules(String workspaceId, String path, AsyncRequestCallback<List<ProjectConfigDto>> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/modules" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/modules" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting modules..."))
@@ -218,7 +213,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
                              String parentProjectPath,
                              ProjectConfigDto projectConfig,
                              AsyncRequestCallback<ProjectConfigDto> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + normalizePath(parentProjectPath);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + normalizePath(parentProjectPath);
         asyncRequestFactory.createPostRequest(requestUrl, projectConfig)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Creating module..."))
@@ -230,7 +225,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
                               String path,
                               ProjectConfigDto projectConfig,
                               AsyncRequestCallback<ProjectConfigDto> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + normalizePath(path);
         asyncRequestFactory.createRequest(PUT, requestUrl, projectConfig, false)
                            .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
@@ -240,7 +235,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public Promise<ProjectConfigDto> updateProject(String workspaceId, String path, ProjectConfigDto projectConfig) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + normalizePath(path);
         return asyncRequestFactory.createRequest(PUT, requestUrl, projectConfig, false)
                                   .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
@@ -254,7 +249,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
                            String name,
                            String content,
                            AsyncRequestCallback<ItemReference> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/file" + normalizePath(parentPath) +
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/file" + normalizePath(parentPath) +
                                   "?name=" + name;
         asyncRequestFactory.createPostRequest(requestUrl, null)
                            .data(content)
@@ -264,7 +259,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getFileContent(String workspaceId, String path, AsyncRequestCallback<String> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/file" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/file" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .loader(loaderFactory.newLoader("Loading file content..."))
                            .send(callback);
@@ -272,7 +267,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void updateFile(String workspaceId, String path, String content, AsyncRequestCallback<Void> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/file" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/file" + normalizePath(path);
         asyncRequestFactory.createRequest(PUT, requestUrl, null, false)
                            .data(content)
                            .loader(loaderFactory.newLoader("Updating file..."))
@@ -281,7 +276,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void createFolder(String workspaceId, String path, AsyncRequestCallback<ItemReference> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/folder" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/folder" + normalizePath(path);
         asyncRequestFactory.createPostRequest(requestUrl, null)
                            .loader(loaderFactory.newLoader("Creating folder..."))
                            .send(callback);
@@ -289,7 +284,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void delete(String workspaceId, String path, AsyncRequestCallback<Void> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + normalizePath(path);
         asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
                            .loader(loaderFactory.newLoader("Deleting project..."))
                            .send(callback);
@@ -297,7 +292,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void deleteModule(String workspaceId, String pathToParent, String modulePath, AsyncRequestCallback<Void> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/module" + normalizePath(pathToParent)
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/module" + normalizePath(pathToParent)
                                   + "?module=" + modulePath;
         asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
                            .loader(loaderFactory.newLoader("Deleting module..."))
@@ -306,7 +301,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void copy(String workspaceId, String path, String newParentPath, String newName, AsyncRequestCallback<Void> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/copy" + normalizePath(path) +
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/copy" + normalizePath(path) +
                                   "?to=" + newParentPath;
 
         final CopyOptions copyOptions = dtoFactory.createDto(CopyOptions.class);
@@ -320,7 +315,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void move(String workspaceId, String path, String newParentPath, String newName, AsyncRequestCallback<Void> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/move" + normalizePath(path)
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/move" + normalizePath(path)
                                   + "?to=" + newParentPath;
 
         final MoveOptions moveOptions = dtoFactory.createDto(MoveOptions.class);
@@ -334,7 +329,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void rename(String workspaceId, String path, String newName, String newMediaType, AsyncRequestCallback<Void> callback) {
-        String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/rename" + normalizePath(path) + "?name=" + newName;
+        String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/rename" + normalizePath(path) + "?name=" + newName;
         if (newMediaType != null) {
             requestUrl += "&mediaType=" + newMediaType;
         }
@@ -426,7 +421,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getChildren(String workspaceId, String path, AsyncRequestCallback<List<ItemReference>> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/children" + normalizePath(path);
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/children" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .send(callback);
@@ -434,7 +429,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getTree(String workspaceId, String path, int depth, AsyncRequestCallback<TreeElement> callback) {
-        final String requestUrl = urlProvider.get() + extPath + "/project/" + workspaceId + "/tree" + normalizePath(path) +
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/tree" + normalizePath(path) +
                                   "?depth=" + depth;
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
@@ -444,7 +439,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public Promise<List<ItemReference>> search(String workspaceId, QueryExpression expression) {
-        StringBuilder requestUrl = new StringBuilder(urlProvider.get() + extPath + "/project/" + workspaceId + "/search");
+        StringBuilder requestUrl = new StringBuilder(urlProvider.get() + "/project/" + workspaceId + "/search");
         if (expression.getPath() != null) {
             requestUrl.append(normalizePath(expression.getPath()));
         } else {

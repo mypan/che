@@ -12,7 +12,6 @@ package org.eclipse.che.ide.projectimport.local;
 
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
@@ -44,7 +43,6 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
     private final LocalZipImporterPageView      view;
     private final DtoFactory                    dtoFactory;
     private final String                        workspaceId;
-    private final String                        extPath;
     private final EventBus                      eventBus;
     private final VfsServiceClient              vfsServiceClient;
     private final ProjectServiceClient          projectServiceClient;
@@ -57,7 +55,6 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
                                          DtoFactory dtoFactory,
                                          CoreLocalizationConstant locale,
                                          AppContext appContext,
-                                         @Named("cheExtensionPath") String extPath,
                                          EventBus eventBus,
                                          VfsServiceClient vfsServiceClient,
                                          ProjectServiceClient projectServiceClient,
@@ -69,7 +66,6 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
         this.locale = locale;
         this.dtoFactory = dtoFactory;
         this.workspaceId = appContext.getWorkspace().getId();
-        this.extPath = extPath;
         this.eventBus = eventBus;
         this.vfsServiceClient = vfsServiceClient;
         this.appContext = appContext;
@@ -155,7 +151,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
         projectNotificationSubscriber.subscribe(projectName);
 
         view.setEncoding(FormPanel.ENCODING_MULTIPART);
-        view.setAction(urlProvider.get() + extPath + "/project/" + workspaceId + "/upload/zipproject/" + projectName + "?force=false");
+        view.setAction(urlProvider.get() + "/project/" + workspaceId + "/upload/zipproject/" + projectName + "?force=false");
         view.submit();
         showProcessing(true);
     }

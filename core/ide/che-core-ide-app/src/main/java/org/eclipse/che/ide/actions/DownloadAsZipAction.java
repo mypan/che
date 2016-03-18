@@ -12,7 +12,6 @@ package org.eclipse.che.ide.actions;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
@@ -48,11 +47,9 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
     private final DownloadContainer        downloadContainer;
     private final ProjectExplorerPresenter projectExplorer;
     private final WsAgentUrlProvider       urlProvider;
-    private final String                   extPath;
 
     @Inject
-    public DownloadAsZipAction(@Named("cheExtensionPath") String extPath,
-                               AppContext appContext,
+    public DownloadAsZipAction(AppContext appContext,
                                CoreLocalizationConstant locale,
                                Resources resources,
                                AnalyticsEventLogger eventLogger,
@@ -64,7 +61,6 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
               locale.downloadProjectAsZipDescription(),
               null,
               resources.downloadZip());
-        this.extPath = extPath;
         this.appContext = appContext;
         this.eventLogger = eventLogger;
         this.downloadContainer = downloadContainer;
@@ -77,7 +73,7 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
     public void actionPerformed(ActionEvent e) {
         eventLogger.log(this);
 
-        String url = urlProvider.get() + extPath + "/project/" + appContext.getWorkspace().getId() + "/export/" + getPath();
+        String url = urlProvider.get() + "/project/" + appContext.getWorkspaceId() + "/export/" + getPath();
         downloadContainer.setUrl(url);
     }
 

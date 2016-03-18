@@ -12,7 +12,6 @@ package org.eclipse.che.ide.upload.folder;
 
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
@@ -43,7 +42,6 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
     private final ProjectExplorerPresenter projectExplorer;
     private final CoreLocalizationConstant locale;
     private final EditorAgent              editorAgent;
-    private final String                   restContext;
     private final String                   workspaceId;
     private final EventBus                 eventBus;
     private final NotificationManager      notificationManager;
@@ -51,7 +49,6 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
 
     @Inject
     public UploadFolderFromZipPresenter(UploadFolderFromZipView view,
-                                        @Named("cheExtensionPath") String restContext,
                                         AppContext appContext,
                                         EditorAgent editorAgent,
                                         EventBus eventBus,
@@ -59,7 +56,6 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
                                         ProjectExplorerPresenter projectExplorer,
                                         CoreLocalizationConstant locale,
                                         WsAgentUrlProvider urlProvider) {
-        this.restContext = restContext;
         this.workspaceId = appContext.getWorkspaceId();
         this.editorAgent = editorAgent;
         this.eventBus = eventBus;
@@ -106,7 +102,7 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
     public void onUploadClicked() {
         view.setLoaderVisibility(true);
         view.setEncoding(FormPanel.ENCODING_MULTIPART);
-        view.setAction(urlProvider.get() + restContext + "/project/" + workspaceId + "/upload/zipfolder/" +
+        view.setAction(urlProvider.get() + "/project/" + workspaceId + "/upload/zipfolder/" +
                        ((HasStorablePath)getResourceBasedNode()).getStorablePath());
         view.submit();
     }

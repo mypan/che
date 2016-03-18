@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.che.ide.client.DevMachineLauncher.PATH_TO_WS_AGENT;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -116,7 +117,7 @@ public class DevMachineLauncherTest {
 
         verify(machineDescriptor).getStatus();
         verify(appContext).setDevMachineId(DEV_MACHINE_ID);
-        verify(appContext).setWsAgentURL(WS_AGENT_URL);
+        verify(appContext).setWsAgentURL(WS_AGENT_URL + PATH_TO_WS_AGENT);
 
         verify(machineManager).onMachineRunning(DEV_MACHINE_ID);
         verify(startedCallback).onStarted();

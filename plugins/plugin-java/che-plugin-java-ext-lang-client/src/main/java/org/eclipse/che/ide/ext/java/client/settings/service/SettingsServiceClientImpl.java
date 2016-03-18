@@ -11,7 +11,6 @@
 package org.eclipse.che.ide.ext.java.client.settings.service;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
@@ -33,7 +32,6 @@ import static org.eclipse.che.ide.rest.HTTPHeader.CONTENT_TYPE;
  */
 public class SettingsServiceClientImpl implements SettingsServiceClient {
 
-    private final String              extPath;
     private final AsyncRequestFactory asyncRequestFactory;
     private final String              workspaceId;
     private final WsAgentUrlProvider  urlProvider;
@@ -41,9 +39,7 @@ public class SettingsServiceClientImpl implements SettingsServiceClient {
     @Inject
     public SettingsServiceClientImpl(AppContext appContext,
                                      AsyncRequestFactory asyncRequestFactory,
-                                     WsAgentUrlProvider urlProvider,
-                                     @Named("cheExtensionPath") String extPath) {
-        this.extPath = extPath;
+                                     WsAgentUrlProvider urlProvider) {
         this.workspaceId = appContext.getWorkspaceId();
         this.asyncRequestFactory = asyncRequestFactory;
         this.urlProvider = urlProvider;
@@ -52,7 +48,7 @@ public class SettingsServiceClientImpl implements SettingsServiceClient {
     /** {@inheritDoc} */
     @Override
     public Promise<Void> applyCompileParameters(@NotNull final Map<String, String> parameters) {
-        String url = urlProvider.get() + extPath + "/jdt/" + workspaceId + "/compiler-settings/set";
+        String url = urlProvider.get() + "/jdt/" + workspaceId + "/compiler-settings/set";
 
         JsonSerializable data = new JsonSerializable() {
             @Override
@@ -70,7 +66,7 @@ public class SettingsServiceClientImpl implements SettingsServiceClient {
     /** {@inheritDoc} */
     @Override
     public Promise<Map<String, String>> getCompileParameters() {
-        String url = urlProvider.get() + extPath + "/jdt/" + workspaceId + "/compiler-settings/all";
+        String url = urlProvider.get() + "/jdt/" + workspaceId + "/compiler-settings/all";
 
         return asyncRequestFactory.createGetRequest(url)
                                   .header(ACCEPT, APPLICATION_JSON)

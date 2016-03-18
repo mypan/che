@@ -13,7 +13,6 @@ package org.eclipse.che.ide.ext.java.client.refactoring.service;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
@@ -64,7 +63,6 @@ final class RefactoringServiceClientImpl implements RefactoringServiceClient {
     @Inject
     public RefactoringServiceClientImpl(AsyncRequestFactory asyncRequestFactory,
                                         DtoUnmarshallerFactory unmarshallerFactory,
-                                        @Named("cheExtensionPath") String extPath,
                                         AppContext appContext,
                                         LoaderFactory loaderFactory,
                                         WsAgentUrlProvider urlProvider) {
@@ -73,7 +71,7 @@ final class RefactoringServiceClientImpl implements RefactoringServiceClient {
         this.loader = loaderFactory.newLoader();
         this.urlProvider = urlProvider;
 
-        this.pathToService = extPath + "/jdt/" + appContext.getWorkspace().getId() + "/refactoring/";
+        this.pathToService = "/jdt/" + appContext.getWorkspace().getId() + "/refactoring/";
     }
 
     /** {@inheritDoc} */

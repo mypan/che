@@ -13,7 +13,6 @@ package org.eclipse.che.ide.ext.java.client.search;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
@@ -49,14 +48,13 @@ public class JavaSearchServiceRest implements JavaSearchService {
     public JavaSearchServiceRest(AsyncRequestFactory asyncRequestFactory,
                                  DtoUnmarshallerFactory unmarshallerFactory,
                                  LoaderFactory loaderFactory,
-                                 @Named("cheExtensionPath") String extPath,
                                  AppContext appContext,
                                  WsAgentUrlProvider urlProvider) {
         this.asyncRequestFactory = asyncRequestFactory;
         this.unmarshallerFactory = unmarshallerFactory;
         this.loader = loaderFactory.newLoader();
         this.urlProvider = urlProvider;
-        this.pathToService = extPath + "/jdt/" + appContext.getWorkspace().getId() + "/search/";
+        this.pathToService = "/jdt/" + appContext.getWorkspace().getId() + "/search/";
     }
 
     @Override
