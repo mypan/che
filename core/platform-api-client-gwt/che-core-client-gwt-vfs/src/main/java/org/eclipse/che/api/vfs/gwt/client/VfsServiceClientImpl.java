@@ -13,6 +13,7 @@ package org.eclipse.che.api.vfs.gwt.client;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.inject.name.Named;
 
+import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.vfs.shared.dto.Item;
 import org.eclipse.che.api.vfs.shared.dto.ReplacementSet;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
@@ -38,14 +39,17 @@ public class VfsServiceClientImpl implements VfsServiceClient {
     private final AsyncRequestLoader  loader;
     private final AsyncRequestFactory asyncRequestFactory;
     private final String              extPath;
+    private final WsAgentUrlProvider  urlProvider;
 
     @Inject
     public VfsServiceClientImpl(@Named("cheExtensionPath") String extPath,
                                 LoaderFactory loaderFactory,
-                                AsyncRequestFactory asyncRequestFactory) {
+                                AsyncRequestFactory asyncRequestFactory,
+                                WsAgentUrlProvider urlProvider) {
         this.loader = loaderFactory.newLoader();
         this.extPath = extPath;
         this.asyncRequestFactory = asyncRequestFactory;
+        this.urlProvider = urlProvider;
     }
 
     @Override
@@ -53,7 +57,7 @@ public class VfsServiceClientImpl implements VfsServiceClient {
                         @NotNull String projectPath,
                         List<ReplacementSet> replacementSets,
                         AsyncRequestCallback<Void> callback) {
-        String path = extPath + "/vfs/" + workspaceId + "/v2/replace" + normalizePath(projectPath);
+        String path = urlProvider.get() + extPath + "/vfs/" + workspaceId + "/v2/replace" + normalizePath(projectPath);
 
         asyncRequestFactory.createRequest(RequestBuilder.POST, path, replacementSets, false)
                            .header(CONTENT_TYPE, APPLICATION_JSON)
@@ -63,7 +67,7 @@ public class VfsServiceClientImpl implements VfsServiceClient {
 
     @Override
     public void getItemByPath(@NotNull String workspaceId, @NotNull String path, AsyncRequestCallback<Item> callback) {
-        final String url = extPath + "/vfs/" + workspaceId + "/v2/itembypath" + normalizePath(path);
+        final String url = urlProvider.get() + extPath + "/vfs/" + workspaceId + "/v2/itembypath" + normalizePath(path);
 
         asyncRequestFactory.createGetRequest(url)
                            .header(ACCEPT, APPLICATION_JSON)

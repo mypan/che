@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -40,18 +41,21 @@ public class JavaSearchServiceRest implements JavaSearchService {
 
     private final AsyncRequestFactory    asyncRequestFactory;
     private final DtoUnmarshallerFactory unmarshallerFactory;
-    private       MessageLoader          loader;
+    private final MessageLoader          loader;
     private final String                 pathToService;
+    private final WsAgentUrlProvider     urlProvider;
 
     @Inject
     public JavaSearchServiceRest(AsyncRequestFactory asyncRequestFactory,
                                  DtoUnmarshallerFactory unmarshallerFactory,
                                  LoaderFactory loaderFactory,
                                  @Named("cheExtensionPath") String extPath,
-                                 AppContext appContext) {
+                                 AppContext appContext,
+                                 WsAgentUrlProvider urlProvider) {
         this.asyncRequestFactory = asyncRequestFactory;
         this.unmarshallerFactory = unmarshallerFactory;
         this.loader = loaderFactory.newLoader();
+        this.urlProvider = urlProvider;
         this.pathToService = extPath + "/jdt/" + appContext.getWorkspace().getId() + "/search/";
     }
 
@@ -61,7 +65,7 @@ public class JavaSearchServiceRest implements JavaSearchService {
             @Override
             public void makeCall(AsyncCallback<FindUsagesResponse> callback) {
 
-                asyncRequestFactory.createPostRequest(pathToService + "find/usages", request)
+                asyncRequestFactory.createPostRequest(urlProvider.get() + pathToService + "find/usages", request)
                                    .header(CONTENT_TYPE, APPLICATION_JSON)
                                    .loader(loader)
                                    .send(newCallback(callback, unmarshallerFactory.newUnmarshaller(FindUsagesResponse.class)));

@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
+import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
@@ -42,12 +43,12 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Singleton
 public class DownloadAsZipAction extends AbstractPerspectiveAction {
 
-    private final String BASE_URL;
-
     private final AnalyticsEventLogger     eventLogger;
     private final AppContext               appContext;
-    private       DownloadContainer        downloadContainer;
+    private final DownloadContainer        downloadContainer;
     private final ProjectExplorerPresenter projectExplorer;
+    private final WsAgentUrlProvider       urlProvider;
+    private final String                   extPath;
 
     @Inject
     public DownloadAsZipAction(@Named("cheExtensionPath") String extPath,
@@ -56,18 +57,19 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
                                Resources resources,
                                AnalyticsEventLogger eventLogger,
                                DownloadContainer downloadContainer,
-                               ProjectExplorerPresenter projectExplorer) {
+                               ProjectExplorerPresenter projectExplorer,
+                               WsAgentUrlProvider urlProvider) {
         super(Arrays.asList(PROJECT_PERSPECTIVE_ID),
               locale.downloadProjectAsZipName(),
               locale.downloadProjectAsZipDescription(),
               null,
               resources.downloadZip());
+        this.extPath = extPath;
         this.appContext = appContext;
         this.eventLogger = eventLogger;
         this.downloadContainer = downloadContainer;
         this.projectExplorer = projectExplorer;
-
-        BASE_URL = extPath + "/project/" + appContext.getWorkspace().getId() + "/export/";
+        this.urlProvider = urlProvider;
     }
 
     /** {@inheritDoc} */
@@ -75,7 +77,7 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
     public void actionPerformed(ActionEvent e) {
         eventLogger.log(this);
 
-        String url = BASE_URL + getPath();
+        String url = urlProvider.get() + extPath + "/project/" + appContext.getWorkspace().getId() + "/export/" + getPath();
         downloadContainer.setUrl(url);
     }
 

@@ -37,7 +37,7 @@ public class ApiServletModule extends ServletModule {
         getServletContext().addListener(new WSConnectionTracker());
 
         final Map<String, String> corsFilterParams = new HashMap<>();
-        corsFilterParams.put(PARAM_CORS_ALLOWED_ORIGINS, "localhost");
+        corsFilterParams.put(PARAM_CORS_ALLOWED_ORIGINS, "http://localhost:8080");
         corsFilterParams.put(PARAM_CORS_ALLOWED_METHODS, "GET," +
                                                          "POST," +
                                                          "HEAD," +

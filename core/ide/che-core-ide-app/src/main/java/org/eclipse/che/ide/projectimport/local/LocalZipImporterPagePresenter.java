@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
 import org.eclipse.che.api.vfs.gwt.client.VfsServiceClient;
 import org.eclipse.che.api.vfs.shared.dto.Item;
@@ -49,6 +50,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
     private final ProjectServiceClient          projectServiceClient;
     private final DialogFactory                 dialogFactory;
     private final ProjectNotificationSubscriber projectNotificationSubscriber;
+    private final WsAgentUrlProvider            urlProvider;
 
     @Inject
     public LocalZipImporterPagePresenter(LocalZipImporterPageView view,
@@ -60,8 +62,10 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
                                          VfsServiceClient vfsServiceClient,
                                          ProjectServiceClient projectServiceClient,
                                          DialogFactory dialogFactory,
-                                         ProjectNotificationSubscriber projectNotificationSubscriber) {
+                                         ProjectNotificationSubscriber projectNotificationSubscriber,
+                                         WsAgentUrlProvider urlProvider) {
         this.view = view;
+        this.view.setDelegate(this);
         this.locale = locale;
         this.dtoFactory = dtoFactory;
         this.workspaceId = appContext.getWorkspace().getId();
@@ -72,7 +76,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
         this.projectServiceClient = projectServiceClient;
         this.dialogFactory = dialogFactory;
         this.projectNotificationSubscriber = projectNotificationSubscriber;
-        this.view.setDelegate(this);
+        this.urlProvider = urlProvider;
     }
 
     public void show() {
@@ -151,7 +155,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
         projectNotificationSubscriber.subscribe(projectName);
 
         view.setEncoding(FormPanel.ENCODING_MULTIPART);
-        view.setAction(extPath + "/project/" + workspaceId + "/upload/zipproject/" + projectName + "?force=false");
+        view.setAction(urlProvider.get() + extPath + "/project/" + workspaceId + "/upload/zipproject/" + projectName + "?force=false");
         view.submit();
         showProcessing(true);
     }
