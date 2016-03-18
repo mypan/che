@@ -99,9 +99,12 @@ public class BootstrapController {
         eventBus.addHandler(WorkspaceStartedEvent.TYPE, new WorkspaceStartedHandler() {
             @Override
             public void onWorkspaceStarted(WorkspaceStartedEvent event) {
-                devMachineLauncherProvider.get().startDevMachine();
-
-                startWsAgentComponents(components.values().iterator());
+                devMachineLauncherProvider.get().startDevMachine(new DevMachineLauncher.MachineStartedCallback() {
+                    @Override
+                    public void onStarted() {
+                        startWsAgentComponents(components.values().iterator());
+                    }
+                });
             }
         });
     }

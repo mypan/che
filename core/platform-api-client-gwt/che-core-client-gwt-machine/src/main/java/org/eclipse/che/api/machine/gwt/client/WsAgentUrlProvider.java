@@ -13,6 +13,8 @@ package org.eclipse.che.api.machine.gwt.client;
 import com.google.inject.Provider;
 
 /**
+ * The class provides URL to send requests to workspace agent.
+ *
  * @author Dmitry Shnurenko
  */
 public interface WsAgentUrlProvider extends Provider<String> {

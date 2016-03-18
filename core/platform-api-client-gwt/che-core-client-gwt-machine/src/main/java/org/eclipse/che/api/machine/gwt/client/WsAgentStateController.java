@@ -168,7 +168,7 @@ public class WsAgentStateController implements ConnectionOpenedHandler, Connecti
      */
     private void checkHttpConnection() {
         String url = urlProvider.get() + extPath + '/';
-        asyncRequestFactory.createGetRequest(url).send(new AsyncRequestCallback<String>(new StringUnmarshaller()) {
+        asyncRequestFactory.createGetRequest(url).header("Origin","localhost").send(new AsyncRequestCallback<String>(new StringUnmarshaller()) {
             @Override
             protected void onSuccess(String result) {
                 JSONObject object = null;

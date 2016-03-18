@@ -25,6 +25,7 @@ import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.client.DevMachineLauncher.MachineStartedCallback;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,6 +76,8 @@ public class DevMachineLauncherTest {
     private MachineRuntimeInfoDto     runtimeInfoDto;
     @Mock
     private ServerDto                 serverDto;
+    @Mock
+    private MachineStartedCallback    startedCallback;
 
     @InjectMocks
     private DevMachineLauncher devMachineLauncher;
@@ -103,7 +106,7 @@ public class DevMachineLauncherTest {
     public void shouldUseRunningDevMachine() throws Exception {
         when(machineDescriptor.getStatus()).thenReturn(MachineStatus.RUNNING);
 
-        devMachineLauncher.startDevMachine();
+        devMachineLauncher.startDevMachine(startedCallback);
 
         verify(machineServiceClient).getMachines(anyString());
         verify(machinesPromise).then(machinesCaptor.capture());
@@ -116,13 +119,14 @@ public class DevMachineLauncherTest {
         verify(appContext).setWsAgentURL(WS_AGENT_URL);
 
         verify(machineManager).onMachineRunning(DEV_MACHINE_ID);
+        verify(startedCallback).onStarted();
     }
 
     @Test
     public void shouldTransmitControlToMachineManager() throws Exception {
         when(machineDescriptor.getStatus()).thenReturn(MachineStatus.CREATING);
 
-        devMachineLauncher.startDevMachine();
+        devMachineLauncher.startDevMachine(startedCallback);
 
         verify(machineServiceClient).getMachines(anyString());
         verify(machinesPromise).then(machinesCaptor.capture());
@@ -137,7 +141,7 @@ public class DevMachineLauncherTest {
         when(serverDto.getUrl()).thenReturn(null);
         when(machineDescriptor.getStatus()).thenReturn(MachineStatus.RUNNING);
 
-        devMachineLauncher.startDevMachine();
+        devMachineLauncher.startDevMachine(startedCallback);
 
         verify(machineServiceClient).getMachines(anyString());
         verify(machinesPromise).then(machinesCaptor.capture());

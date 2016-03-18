@@ -22,6 +22,7 @@ import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.util.loging.Log;
 
@@ -51,7 +52,7 @@ public class DevMachineLauncher {
         this.machineManager = machineManager;
     }
 
-    public void startDevMachine() {
+    public void startDevMachine(final MachineStartedCallback startedCallback) {
         machineServiceClient.getMachines(appContext.getWorkspaceId()).then(new Operation<List<MachineDto>>() {
             @Override
             public void apply(List<MachineDto> machines) throws OperationException {
@@ -68,12 +69,19 @@ public class DevMachineLauncher {
                         appContext.setDevMachineId(machine.getId());
 
                         machineManager.onMachineRunning(machine.getId());
+
+                        startedCallback.onStarted();
                         break;
                     }
                     if (isDev && status == CREATING) {
                         break;
                     }
                 }
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                Log.error(getClass(), error.getMessage());
             }
         });
     }
@@ -92,5 +100,10 @@ public class DevMachineLauncher {
         }
 
         return url;
+    }
+
+    interface MachineStartedCallback {
+        /** The method is called when dev machine started */
+        void onStarted();
     }
 }

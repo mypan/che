@@ -14,6 +14,7 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.ext.github.shared.Collaborators;
@@ -69,9 +70,10 @@ public class GitHubClientServiceImpl implements GitHubClientService {
                                       LoaderFactory loaderFactory,
                                       AsyncRequestFactory asyncRequestFactory,
                                       AppContext appContext,
-                                      DtoUnmarshallerFactory dtoUnmarshallerFactory) {
+                                      DtoUnmarshallerFactory dtoUnmarshallerFactory,
+                                      WsAgentUrlProvider urlProvider) {
         this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
-        this.baseUrl = extPath + "/github/" + appContext.getWorkspace().getId();
+        this.baseUrl = urlProvider.get() + extPath + "/github/" + appContext.getWorkspace().getId();
         this.loader = loaderFactory.newLoader();
         this.asyncRequestFactory = asyncRequestFactory;
     }

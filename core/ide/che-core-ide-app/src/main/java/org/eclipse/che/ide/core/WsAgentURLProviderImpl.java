@@ -26,7 +26,7 @@ public class WsAgentURLProviderImpl implements WsAgentUrlProvider {
     private final AppContext appContext;
 
     @Inject
-    public WsAgentURLProviderImpl(AppContext appContext) {
+    WsAgentURLProviderImpl(AppContext appContext) {
         this.appContext = appContext;
     }
 

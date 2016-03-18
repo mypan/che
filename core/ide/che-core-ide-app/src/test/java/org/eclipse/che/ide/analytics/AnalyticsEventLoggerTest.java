@@ -13,6 +13,8 @@ package org.eclipse.che.ide.analytics;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.user.gwt.client.UserServiceClient;
+import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
+import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.api.action.Action;
 import org.eclipse.che.ide.api.action.ActionEvent;
@@ -21,8 +23,6 @@ import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.websocket.MessageBus;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
-import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
-import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,6 +64,8 @@ public class AnalyticsEventLoggerTest {
     private UsersWorkspaceDto      workspace;
     @Mock
     private EventBus               eventBus;
+    @Mock
+    private WorkspaceStartedEvent  event;
 
     @Captor
     private ArgumentCaptor<WorkspaceStartedHandler> startWorkspaceCaptor;
@@ -79,7 +81,7 @@ public class AnalyticsEventLoggerTest {
         doReturn("workspaceId").when(eventLogger).getWorkspace();
 
         verify(eventBus).addHandler(eq(WorkspaceStartedEvent.TYPE), startWorkspaceCaptor.capture());
-//        startWorkspaceCaptor.getValue().onWorkspaceStarted(workspace);
+        startWorkspaceCaptor.getValue().onWorkspaceStarted(event);
 
         when(appContext.getWorkspace()).thenReturn(workspace);
         when(workspace.getId()).thenReturn("workspaceId");
@@ -102,7 +104,8 @@ public class AnalyticsEventLoggerTest {
         Map<String, String> params = paramsParam.getValue();
         assertEquals(params.size(), 2);
         assertEquals(params.get(AnalyticsEventLoggerImpl.WS_PARAM), "workspaceId");
-        assertEquals(params.get(AnalyticsEventLoggerImpl.SOURCE_PARAM), "org.eclipse.che.ide.analytics.AnalyticsEventLoggerTest$TestedAction");
+        assertEquals(params.get(AnalyticsEventLoggerImpl.SOURCE_PARAM),
+                     "org.eclipse.che.ide.analytics.AnalyticsEventLoggerTest$TestedAction");
     }
 
     @Test
@@ -122,7 +125,8 @@ public class AnalyticsEventLoggerTest {
         Map<String, String> params = paramsParam.getValue();
         assertEquals(params.size(), 3);
         assertEquals(params.get(AnalyticsEventLoggerImpl.WS_PARAM), "workspaceId");
-        assertEquals(params.get(AnalyticsEventLoggerImpl.SOURCE_PARAM), "org.eclipse.che.ide.analytics.AnalyticsEventLoggerTest$TestedAction");
+        assertEquals(params.get(AnalyticsEventLoggerImpl.SOURCE_PARAM),
+                     "org.eclipse.che.ide.analytics.AnalyticsEventLoggerTest$TestedAction");
         assertEquals(params.get(AnalyticsEventLoggerImpl.ACTION_PARAM), "IDE: Action");
     }
 
@@ -146,7 +150,8 @@ public class AnalyticsEventLoggerTest {
         Map<String, String> params = paramsParam.getValue();
         assertEquals(params.size(), 4);
         assertEquals(params.get(AnalyticsEventLoggerImpl.WS_PARAM), "workspaceId");
-        assertEquals(params.get(AnalyticsEventLoggerImpl.SOURCE_PARAM), "org.eclipse.che.ide.analytics.AnalyticsEventLoggerTest$TestedAction");
+        assertEquals(params.get(AnalyticsEventLoggerImpl.SOURCE_PARAM),
+                     "org.eclipse.che.ide.analytics.AnalyticsEventLoggerTest$TestedAction");
         assertEquals(params.get(AnalyticsEventLoggerImpl.ACTION_PARAM), "IDE: Action");
         assertEquals(params.get("a"), "b");
     }
