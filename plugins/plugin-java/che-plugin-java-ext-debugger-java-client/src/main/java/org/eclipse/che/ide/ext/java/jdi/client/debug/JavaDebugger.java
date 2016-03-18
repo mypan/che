@@ -13,7 +13,6 @@ package org.eclipse.che.ide.ext.java.jdi.client.debug;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
-
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
 import org.eclipse.che.api.promises.client.Function;
@@ -83,7 +82,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
 
     public static final String LANGUAGE = "java";
 
-    private static final String LOCAL_STORAGE_DEBUGGER_KEY = "che-java-debugger";
+    public static final String LOCAL_STORAGE_DEBUGGER_KEY = "che-java-debugger";
 
     private final List<DebuggerObserver>        observers;
     private final JavaDebuggerServiceClientImpl service;
@@ -352,6 +351,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                 List<Variable> variables = arg.getVariables();
                 return dtoFactory.toJson(variables);
             }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError arg) throws OperationException {
+                Log.error(JavaDebugger.class, arg.getMessage());
+            }
         });
     }
 
@@ -366,6 +370,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             @Override
             public String apply(StackFrameDump arg) throws FunctionException {
                 return dtoFactory.toJson(arg);
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError arg) throws OperationException {
+                Log.error(JavaDebugger.class, arg.getMessage());
             }
         });
     }
@@ -423,11 +432,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                 Log.warn(JavaDebugger.class, "FqnResolver is not found");
             }
 
-            BreakPoint point = dtoFactory.createDto(BreakPoint.class);
-            point.setLocation(location);
-            point.setEnabled(true);
+            BreakPoint jdiBreakPoint = dtoFactory.createDto(BreakPoint.class);
+            jdiBreakPoint.setLocation(location);
+            jdiBreakPoint.setEnabled(true);
 
-            Promise<Void> promise = service.deleteBreakpoint(javaDebuggerInfo.getId(), point);
+            Promise<Void> promise = service.deleteBreakpoint(javaDebuggerInfo.getId(), jdiBreakPoint);
             promise.then(new Operation<Void>() {
                 @Override
                 public void apply(Void arg) throws OperationException {
@@ -457,6 +466,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
                         observer.onAllBreakpointDeleted();
                     }
                 }
+            }).catchError(new Operation<PromiseError>() {
+                @Override
+                public void apply(PromiseError arg) throws OperationException {
+                    Log.error(JavaDebugger.class, arg.getMessage());
+                }
             });
         }
     }
@@ -478,6 +492,11 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
             public Void apply(JavaDebuggerInfo arg) throws FunctionException {
                 debuggerDescriptor.setInfo(arg.getVmName() + " " + arg.getVmVersion());
                 return null;
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError arg) throws OperationException {
+                Log.error(JavaDebugger.class, arg.getMessage());
             }
         });
 
@@ -660,7 +679,7 @@ public class JavaDebugger implements Debugger<JavaDebuggerConnectionContext>, De
         observers.remove(observer);
     }
 
-    private void setJavaDebuggerInfo(JavaDebuggerInfo javaDebuggerInfo) {
+    protected void setJavaDebuggerInfo(JavaDebuggerInfo javaDebuggerInfo) {
         this.javaDebuggerInfo = javaDebuggerInfo;
     }
 

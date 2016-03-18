@@ -40,4 +40,24 @@ public class DebuggerDescriptor {
     public void setAddress(String address) {
         this.address = address;
     }
+
+    @Override public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        DebuggerDescriptor that = (DebuggerDescriptor)o;
+
+        if (info != null ? !info.equals(that.info) : that.info != null)
+            return false;
+        return address != null ? address.equals(that.address) : that.address == null;
+
+    }
+
+    @Override public int hashCode() {
+        int result = info != null ? info.hashCode() : 0;
+        result = 31 * result + (address != null ? address.hashCode() : 0);
+        return result;
+    }
 }

@@ -10,12 +10,21 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.jdi.client.debug.remotedebug;
 
+import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
+import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.debug.DebuggerManager;
+import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.ext.java.jdi.client.JavaRuntimeLocalizationConstant;
 import org.eclipse.che.ide.ext.java.jdi.client.debug.DebuggerPresenter;
+import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFactory;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Dmitry Shnurenko
@@ -24,9 +33,21 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class RemoteDebugPresenterTest {
 
     @Mock
-    private RemoteDebugView   view;
+    private RemoteDebugView                 view;
     @Mock
-    private DebuggerPresenter debuggerPresenter;
+    private DebuggerManager                 debuggerManager;
+    @Mock
+    private AppContext                      appContext;
+    @Mock
+    private MachineServiceClient            machineServiceClient;
+    @Mock
+    private EntityFactory                   entityFactory;
+    @Mock
+    private DtoFactory                      dtoFactory;
+    @Mock
+    private DialogFactory                   dialogFactory;
+    @Mock
+    private JavaRuntimeLocalizationConstant localizationConstant;
 
     @InjectMocks
     private RemoteDebugPresenter presenter;
@@ -34,8 +55,5 @@ public class RemoteDebugPresenterTest {
     @Test
     public void connectToRemoteDebuggerShouldBeDone() throws Exception {
         presenter.onConfirmClicked("host", 8000);
-
-        // TODO
-//        verify(debuggerPresenter).attachDebugger("host", 8000);
     }
 }
