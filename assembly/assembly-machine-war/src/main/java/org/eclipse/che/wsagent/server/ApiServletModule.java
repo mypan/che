@@ -26,6 +26,7 @@ import java.util.Map;
 import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_ALLOWED_HEADERS;
 import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_ALLOWED_METHODS;
 import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_ALLOWED_ORIGINS;
+import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_EXPOSED_HEADERS;
 import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_PREFLIGHT_MAXAGE;
 import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_SUPPORT_CREDENTIALS;
 
@@ -50,6 +51,7 @@ public class ApiServletModule extends ServletModule {
                                                          "Origin," +
                                                          "Access-Control-Request-Method," +
                                                          "Access-Control-Request-Headers");
+        corsFilterParams.put(PARAM_CORS_EXPOSED_HEADERS, "JAXRS-Body-Provided");
         corsFilterParams.put(PARAM_CORS_SUPPORT_CREDENTIALS, "true");
         // preflight cache is available for 10 minutes
         corsFilterParams.put(PARAM_CORS_PREFLIGHT_MAXAGE, "10");
