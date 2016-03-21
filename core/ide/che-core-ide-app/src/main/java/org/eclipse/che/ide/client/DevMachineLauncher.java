@@ -26,6 +26,7 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.util.loging.Log;
 
+import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 
@@ -39,16 +40,17 @@ import static org.eclipse.che.api.core.model.machine.MachineStatus.RUNNING;
 @Singleton
 public class DevMachineLauncher {
 
-    public static final String PATH_TO_WS_AGENT = "/ide/ext";
-
     private final MachineServiceClient machineServiceClient;
     private final AppContext           appContext;
     private final MachineManager       machineManager;
+    private final String               wsAgentPath;
 
     @Inject
-    public DevMachineLauncher(AppContext appContext,
+    public DevMachineLauncher(@Named("ws.agent.path") String wsAgentPath,
+                              AppContext appContext,
                               MachineManager machineManager,
                               MachineServiceClient machineServiceClient) {
+        this.wsAgentPath = wsAgentPath;
         this.machineServiceClient = machineServiceClient;
         this.appContext = appContext;
         this.machineManager = machineManager;
@@ -101,7 +103,7 @@ public class DevMachineLauncher {
             throw new IllegalArgumentException(errorMessage);
         }
 
-        return url + PATH_TO_WS_AGENT;
+        return url + wsAgentPath;
     }
 
     interface MachineStartedCallback {

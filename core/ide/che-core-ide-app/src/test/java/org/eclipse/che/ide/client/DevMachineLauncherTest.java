@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -40,7 +39,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.eclipse.che.ide.client.DevMachineLauncher.PATH_TO_WS_AGENT;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,7 +78,6 @@ public class DevMachineLauncherTest {
     @Mock
     private MachineStartedCallback    startedCallback;
 
-    @InjectMocks
     private DevMachineLauncher devMachineLauncher;
 
     @Captor
@@ -101,6 +98,8 @@ public class DevMachineLauncherTest {
         when(machinesPromise.then(Matchers.<Operation<List<MachineDto>>>anyObject())).thenReturn(machinesPromise);
         when(machineConfigDescriptor.isDev()).thenReturn(true);
         when(usersWorkspaceDto.getId()).thenReturn(TEXT);
+
+        devMachineLauncher = new DevMachineLauncher("/pathToWsAgent", appContext, machineManager, machineServiceClient);
     }
 
     @Test
@@ -117,7 +116,7 @@ public class DevMachineLauncherTest {
 
         verify(machineDescriptor).getStatus();
         verify(appContext).setDevMachineId(DEV_MACHINE_ID);
-        verify(appContext).setWsAgentURL(WS_AGENT_URL + PATH_TO_WS_AGENT);
+        verify(appContext).setWsAgentURL(WS_AGENT_URL + "/pathToWsAgent");
 
         verify(machineManager).onMachineRunning(DEV_MACHINE_ID);
         verify(startedCallback).onStarted();

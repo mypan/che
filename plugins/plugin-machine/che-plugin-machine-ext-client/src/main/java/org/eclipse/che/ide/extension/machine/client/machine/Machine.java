@@ -13,6 +13,7 @@ package org.eclipse.che.ide.extension.machine.client.machine;
 import com.google.gwt.user.client.Window;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.name.Named;
 
 import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.machine.shared.Constants;
@@ -29,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.eclipse.che.ide.client.DevMachineLauncher.PATH_TO_WS_AGENT;
-
 /**
  * The class which describes machine entity. The class is wrapper of MachineDescriptor.
  *
@@ -40,11 +39,16 @@ public class Machine {
 
     private final MachineDto    descriptor;
     private final EntityFactory entityFactory;
+    private final String        wsAgentPath;
 
     private String activeTabName;
 
     @Inject
-    public Machine(MachineLocalizationConstant locale, EntityFactory entityFactory, @Assisted MachineDto descriptor) {
+    public Machine(@Named("ws.agent.path") String wsAgentPath,
+                   MachineLocalizationConstant locale,
+                   EntityFactory entityFactory,
+                   @Assisted MachineDto descriptor) {
+        this.wsAgentPath = wsAgentPath;
         this.entityFactory = entityFactory;
         this.descriptor = descriptor;
 
@@ -99,7 +103,7 @@ public class Machine {
 
         boolean isSecureConnection = Window.Location.getProtocol().equals("https:");
 
-        return (isSecureConnection ? "wss" : "ws") + extUrl + PATH_TO_WS_AGENT + "/ws";
+        return (isSecureConnection ? "wss" : "ws") + extUrl + wsAgentPath + "/ws";
     }
 
     /**
