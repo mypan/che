@@ -112,7 +112,7 @@ public class WsAgentLauncherImpl implements WsAgentLauncher {
                                                                    .getServers()
                                                                    .get(WS_AGENT_PORT)
                                                                    .getUrl())
-                                                .replacePath(wsAgentPingPath)
+                                                .path(wsAgentPingPath)
                                                 .build()
                                                 .toString();
         return httpJsonRequestFactory.fromUrl(wsAgentPingUrl)
