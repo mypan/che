@@ -20,10 +20,10 @@ export class CheLoaderCrane {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($timeout) {
+  constructor($timeout, $window) {
     this.$timeout = $timeout;
+    this.$window = $window;
     this.restrict = 'E';
-    this.replace = true;
     this.templateUrl = 'components/widget/loader/che-loader-crane.html';
 
     // scope values
@@ -31,7 +31,8 @@ export class CheLoaderCrane {
       step: '@cheStep',
       allSteps: '=cheAllSteps',
       excludeSteps: '=cheExcludeSteps',
-      switchOnIteration: '=?cheSwitchOnIteration'
+      switchOnIteration: '=?cheSwitchOnIteration',
+      inProgress: '=cheInProgress'
     };
   }
 
@@ -53,7 +54,7 @@ export class CheLoaderCrane {
         animationStopping = true;
 
         if (!$scope.switchOnIteration) {
-          // stop animation immediately if it shouldn't wait untill next iteration
+          // stop animation immediately if it shouldn't wait until next iteration
           setNoAnimation();
         }
       }
@@ -66,7 +67,7 @@ export class CheLoaderCrane {
       newStep = newVal;
 
       // go to next step
-      // if animation hasn't run yet or it shouldn't wait untill next iteration
+      // if animation hasn't run yet or it shouldn't wait until next iteration
       if (!animationRunning || !$scope.switchOnIteration) {
         setAnimation();
         setCurrentStep();
@@ -75,6 +76,35 @@ export class CheLoaderCrane {
       if (oldSteps.indexOf(newVal) === -1) {
         oldSteps.push(newVal);
       }
+    });
+
+    let destroyResizeEvent;
+    $scope.$watch(() => {
+      return $scope.inProgress;
+    }, (inProgress) => {
+
+      if (!inProgress) {
+        // destroy event
+        if (typeof destroyResizeEvent === 'function') {
+          destroyResizeEvent();
+        }
+        return;
+      }
+
+      // initial resize
+      this.$timeout(() => {
+        setCraneSize();
+      },0);
+
+      let timeoutPromise;
+      destroyResizeEvent = angular.element(this.$window).bind('resize', (event) => {
+        if (timeoutPromise) {
+          this.$timeout.cancel(timeoutPromise);
+        }
+        timeoutPromise = this.$timeout(() => {
+          setCraneSize();
+        }, 100);
+      });
     });
 
     if (!!$scope.switchOnIteration) {
@@ -91,7 +121,51 @@ export class CheLoaderCrane {
       });
     }
 
-    let setAnimation = () => {
+    let applyScale = (el, scale) => {
+        let height = craneEl.height(),
+          width = craneEl.width();
+        el.css('transform', 'scale3d('+scale+','+scale+','+scale+')');
+        el.css('height', height * scale);
+        el.css('width', width * scale);
+      },
+      hasScrollMoreThan = (el,diff) => {
+        return el.scrollHeight - el.offsetHeight > diff;
+      },
+      setCraneSize = () => {
+        let contentPage = angular.element('#create-project-content-page')[0],
+          scrollEl = element.find('.che-loader-crane-scale-wrapper'),
+          scaleStep = 0.1,
+          scaleMin = 0.6,
+          scale = scaleMin,
+          bodyEl = angular.element(document).find('body')[0];
+
+        applyScale(scrollEl, scale);
+        scrollEl.css('display','block');
+
+        // do nothing if loader is hidden by hide-sm directive
+        if (element.find('.che-loader-crane-scale-wrapper:visible').length === 0) {
+          return;
+        }
+
+        // hide loader if there is scroll on minimal scale
+        if ((hasScrollMoreThan(bodyEl, 5) || hasScrollMoreThan(contentPage, 5)) && scale === scaleMin) {
+          scrollEl.css('display','none');
+          return;
+        }
+
+        while (scale < 1) {
+          applyScale(scrollEl, scale + scaleStep);
+
+          // check for scroll appearance
+          if (hasScrollMoreThan(bodyEl, 5) || hasScrollMoreThan(contentPage, 5)) {
+            applyScale(scrollEl, scale);
+            break;
+          }
+
+          scale = scale + scaleStep;
+        }
+      },
+      setAnimation = () => {
         craneEl.removeClass('che-loader-no-animation');
       },
       setNoAnimation = () => {
@@ -114,7 +188,6 @@ export class CheLoaderCrane {
 
         craneEl.addClass('step-' + newStep);
         cargoEl.addClass('layer-' + newStep);
-      }
+      };
   }
-
 }
