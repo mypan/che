@@ -1,5 +1,4 @@
-<che-panel id="create-project-source-stack" che-title="Select Stack"
-            che-tooltip="Stacks are recipes or images used to define your environment runtime. Workspace environments are used to build and run your project.">
+<div>
   <md-tabs md-dynamic-height md-stretch-tabs="always">
     <md-tab che-event-logger="new.project/select-ready-to-go-stack"
             md-on-select="workspaceSelectStackCtrl.setStackTab('ready-to-go'); workspaceSelectStackCtrl.onStackChange()">
@@ -23,9 +22,7 @@
         <span class="che-tab-label-title">Stack library</span>
       </md-tab-label>
       <md-tab-body>
-        <create-project-stack-library che-is-workspaces="{{workspaceSelectStackCtrl.isWorkspaces}}"
-                                      che-stacks="workspaceSelectStackCtrl.stacks"
-                                      che-workspaces="workspaceSelectStackCtrl.workspaces"></create-project-stack-library>
+        <create-project-stack-library che-stacks="workspaceSelectStackCtrl.stacks"></create-project-stack-library>
       </md-tab-body>
     </md-tab>
     <md-tab che-event-logger="new.project/custom-stack" md-on-select="workspaceSelectStackCtrl.setStackTab('custom-stack')">
@@ -35,8 +32,8 @@
       </md-tab-label>
       <md-tab-body>
         <che-workspace-recipe che-recipe-script="workspaceSelectStackCtrl.recipeScript"
-                               che-recipe-url="workspaceSelectStackCtrl.recipeUrl"></che-workspace-recipe>
+                              che-recipe-url="workspaceSelectStackCtrl.recipeUrl"></che-workspace-recipe>
       </md-tab-body>
     </md-tab>
   </md-tabs>
-</che-panel>
+</div>

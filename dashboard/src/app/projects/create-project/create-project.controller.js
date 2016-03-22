@@ -218,6 +218,12 @@ export class CreateProjectCtrl {
         this.resetCreateProgress();
       }
     } else {
+      let preselectWorkspaceId = this.$location.search().workspaceId;
+      if (preselectWorkspaceId) {
+        this.workspaceSelected = this.lodash.find(this.workspaces, (workspace) => {
+          return workspace.id === preselectWorkspaceId;
+        });
+      }
       // generate project name
       this.generateProjectName(true);
     }
@@ -1033,20 +1039,27 @@ export class CreateProjectCtrl {
   }
 
   /**
-   * Use of an existing workspace
-   * @param workspace the workspace to use
+   * Update data for selected workspace
    */
-  cheStackLibraryWorkspaceSelecter(workspace) {
-    this.workspaceSelected = workspace;
-    this.setWorkspaceName(workspace.config.name);
+  onWorkspaceChange() {
+    if (!this.workspaceSelected) {
+      return;
+    }
+    this.setWorkspaceName(this.workspaceSelected.config.name);
     this.stackLibraryOption = 'existing-workspace';
     let stack = null;
-    if (workspace.config.attributes && workspace.config.attributes.stackId) {
-      let stackId = workspace.config.attributes.stackId;
+    if (this.workspaceSelected.config.attributes && this.workspaceSelected.config.attributes.stackId) {
+      let stackId = this.workspaceSelected.config.attributes.stackId;
       stack = this.cheStack.getStackById(stackId);
     }
     this.updateCurrentStack(stack);
     this.generateProjectName(true);
+    let findEnvironment = this.lodash.find(this.workspaceSelected.config.environments, (environment) => {
+      return environment.name === this.workspaceSelected.config.defaultEnv;
+    });
+    if (findEnvironment) {
+      this.workspaceRam = findEnvironment.machineConfigs[0].limits.ram;
+    }
     this.checkDisabledWorkspace();
   }
 
@@ -1063,7 +1076,7 @@ export class CreateProjectCtrl {
   }
 
   checkDisabledWorkspace() {
-    let val = this.stackLibraryOption === 'existing-workspace' && this.stackTab === 'stack-library';
+    let val = this.stackLibraryOption === 'existing-workspace';
     // if workspace can be configured, generate a new workspace name
     if (!val) {
       this.generateWorkspaceName();

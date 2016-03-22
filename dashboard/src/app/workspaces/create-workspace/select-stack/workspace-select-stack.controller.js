@@ -29,23 +29,12 @@ export class WorkspaceSelectStackCtrl {
 
     $scope.$on('event:selectStackId', (event, data) => {
       event.stopPropagation();
-      let findStack = this.lodash.find(this.stacks, function (stack) {
+      let findStack = this.lodash.find(this.stacks, (stack) => {
         return stack.id === data;
       });
       if (findStack) {
         this.stack = findStack;
         this.onStackSelect();
-      }
-    });
-
-    $scope.$on('event:selectWorkspaceId', (event, data) => {
-      event.stopPropagation();
-      let findWorkspace = this.lodash.find(this.workspaces, function (workspace) {
-        return workspace.id === data;
-      });
-      if (findWorkspace) {
-        this.workspace = findWorkspace;
-        this.onWorkspaceSelect();
       }
     });
   }
@@ -65,23 +54,8 @@ export class WorkspaceSelectStackCtrl {
    * Callback when stack has been select
    */
   onStackSelect() {
-    this.createChoice = 'new-workspace';
     this.$timeout(() => {
       this.onStackChange();
     });
   }
-
-  /**
-   * Callback when workspace has been select
-   */
-  onWorkspaceSelect() {
-    if(!this.isWorkspaces) {
-      return;
-    }
-    this.createChoice = 'existing-workspace';
-    this.$timeout(() => {
-      this.onWorkspaceChange();
-    });
-  }
-
 }
