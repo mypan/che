@@ -95,7 +95,6 @@ public class LocalZipImporterPagePresenterTest {
                                                       appContext,
                                                       eventBus,
                                                       projectServiceClient,
-                                                      dialogFactory,
                                                       projectNotificationSubscriber,
                                                       urlProvider);
     }
