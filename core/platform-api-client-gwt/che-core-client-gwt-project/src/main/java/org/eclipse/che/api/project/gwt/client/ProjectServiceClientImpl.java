@@ -30,6 +30,7 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.ide.MimeType;
 import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
@@ -42,7 +43,6 @@ import org.eclipse.che.ide.websocket.rest.RequestCallback;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.gwt.http.client.RequestBuilder.DELETE;
 import static com.google.gwt.http.client.RequestBuilder.POST;
@@ -88,17 +88,19 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     public void getProjects(String workspaceId, boolean includeAttributes, AsyncRequestCallback<List<ProjectConfigDto>> callback) {
         String requestUrl = urlProvider.get() + "/project/" + workspaceId + "?includeAttributes=" + includeAttributes;
         asyncRequestFactory.createGetRequest(requestUrl)
+    public void getProjects(String workspaceId, AsyncRequestCallback<List<ProjectConfigDto>> callback) {
+        asyncRequestFactory.createGetRequest(extPath + "/project/" + workspaceId)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting projects..."))
                            .send(callback);
     }
 
     @Override
-    public Promise<List<ProjectConfigDto>> getProjects(final String workspaceId, boolean includeAttributes) {
+    public Promise<List<ProjectConfigDto>> getProjects(final String workspaceId) {
         return newPromise(new AsyncPromiseHelper.RequestCall<List<ProjectConfigDto>>() {
             @Override
             public void makeCall(AsyncCallback<List<ProjectConfigDto>> callback) {
-                getProjects(workspaceId, false, newCallback(callback, dtoUnmarshaller.newListUnmarshaller(ProjectConfigDto.class)));
+                getProjects(workspaceId, newCallback(callback, dtoUnmarshaller.newListUnmarshaller(ProjectConfigDto.class)));
             }
         });
     }
@@ -157,10 +159,9 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void createProject(String workspaceId,
-                              String name,
                               ProjectConfigDto projectConfig,
                               AsyncRequestCallback<ProjectConfigDto> callback) {
-        final String requestUrl = urlProvider.get() + "/project/" + workspaceId + "?name=" + name;
+        final String requestUrl = urlProvider.get() + "/project/" + workspaceId;
         asyncRequestFactory.createPostRequest(requestUrl, projectConfig)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Creating project..."))
@@ -329,13 +330,9 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void rename(String workspaceId, String path, String newName, String newMediaType, AsyncRequestCallback<Void> callback) {
-        String requestUrl = urlProvider.get() + "/project/" + workspaceId + "/rename" + normalizePath(path) + "?name=" + newName;
-        if (newMediaType != null) {
-            requestUrl += "&mediaType=" + newMediaType;
-        }
-        asyncRequestFactory.createPostRequest(requestUrl, null)
-                           .loader(loaderFactory.newLoader("Renaming..."))
-                           .send(callback);
+        final Path source = Path.valueOf(path);
+        final Path sourceParent = source.removeLastSegments(1);
+        move(workspaceId, source.toString(), sourceParent.toString(), newName, callback);
     }
 
     @Override
@@ -449,9 +446,6 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         StringBuilder queryParameters = new StringBuilder();
         if (expression.getName() != null && !expression.getName().isEmpty()) {
             queryParameters.append("&name=").append(expression.getName());
-        }
-        if (expression.getMediaType() != null && !expression.getMediaType().isEmpty()) {
-            queryParameters.append("&mediatype=").append(expression.getMediaType());
         }
         if (expression.getText() != null && !expression.getText().isEmpty()) {
             queryParameters.append("&text=").append(expression.getText());

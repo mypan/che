@@ -16,8 +16,6 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.api.vfs.gwt.client.VfsServiceClient;
-import org.eclipse.che.api.vfs.shared.dto.Item;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -26,7 +24,6 @@ import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.json.JsonHelper;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.eclipse.che.ide.util.NameUtils;
 import org.eclipse.che.ide.util.loging.Log;
 
@@ -44,9 +41,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
     private final DtoFactory                    dtoFactory;
     private final String                        workspaceId;
     private final EventBus                      eventBus;
-    private final VfsServiceClient              vfsServiceClient;
     private final ProjectServiceClient          projectServiceClient;
-    private final DialogFactory                 dialogFactory;
     private final ProjectNotificationSubscriber projectNotificationSubscriber;
     private final WsAgentUrlProvider            urlProvider;
 
@@ -56,9 +51,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
                                          CoreLocalizationConstant locale,
                                          AppContext appContext,
                                          EventBus eventBus,
-                                         VfsServiceClient vfsServiceClient,
                                          ProjectServiceClient projectServiceClient,
-                                         DialogFactory dialogFactory,
                                          ProjectNotificationSubscriber projectNotificationSubscriber,
                                          WsAgentUrlProvider urlProvider) {
         this.view = view;
@@ -67,10 +60,8 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
         this.dtoFactory = dtoFactory;
         this.workspaceId = appContext.getWorkspace().getId();
         this.eventBus = eventBus;
-        this.vfsServiceClient = vfsServiceClient;
         this.appContext = appContext;
         this.projectServiceClient = projectServiceClient;
-        this.dialogFactory = dialogFactory;
         this.projectNotificationSubscriber = projectNotificationSubscriber;
         this.urlProvider = urlProvider;
     }
@@ -130,20 +121,7 @@ public class LocalZipImporterPagePresenter implements LocalZipImporterPageView.A
 
     @Override
     public void onImportClicked() {
-        // check on VFS because need to check whether the folder with the same name already exists in the root of workspace
-        final String projectName = view.getProjectName();
-        vfsServiceClient.getItemByPath(appContext.getWorkspaceId(), projectName, new AsyncRequestCallback<Item>() {
-            @Override
-            protected void onSuccess(Item result) {
-                view.setEnabledImportButton(false);
-                dialogFactory.createMessageDialog("", locale.createProjectFromTemplateProjectExists(projectName), null).show();
-            }
-
-            @Override
-            protected void onFailure(Throwable exception) {
-                importProject();
-            }
-        });
+        importProject();
     }
 
     private void importProject() {
