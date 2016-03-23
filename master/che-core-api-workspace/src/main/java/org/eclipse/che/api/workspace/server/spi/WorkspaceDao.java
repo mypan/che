@@ -61,8 +61,7 @@ public interface WorkspaceDao {
      * @throws NotFoundException
      *         when workspace with given {@link WorkspaceImpl#getId() identifier} was not found
      * @throws ConflictException
-     *         when workspace with given {@link WorkspaceImpl#getName() name}
-     *         already exists for given {@link WorkspaceImpl#getNamespace() owner}
+     *         when workspace with given name already exists for given owner
      * @throws ServerException
      *         when any other error occurs during workspace updating
      */

@@ -13,6 +13,7 @@ package org.eclipse.che.api.workspace.server;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.machine.server.MachineManager;
 
 import org.eclipse.che.api.core.model.machine.MachineConfig;
@@ -63,13 +64,16 @@ public class WorkspaceRuntimesTest {
     @Mock
     private MachineManager machineManagerMock;
 
+    @Mock
+    private EventService eventService;
+
     private WorkspaceRuntimes runtimes;
 
     @BeforeMethod
     public void setUp() throws Exception {
         when(machineManagerMock.createMachineSync(any(), any(), any()))
                 .thenAnswer(invocation -> createMachine((MachineConfig)invocation.getArguments()[0]));
-        runtimes = new WorkspaceRuntimes(machineManagerMock);
+        runtimes = new WorkspaceRuntimes(machineManagerMock, eventService);
     }
 
     @Test(expectedExceptions = NotFoundException.class,
@@ -90,7 +94,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void workspaceShouldBeInStartingStatusUntilDevMachineIsNotStarted() throws Exception {
         final MachineManager machineManagerMock = mock(MachineManager.class);
-        final WorkspaceRuntimes runtimes = new WorkspaceRuntimes(machineManagerMock);
+        final WorkspaceRuntimes runtimes = new WorkspaceRuntimes(machineManagerMock, eventService);
         final WorkspaceImpl workspace = createWorkspace();
 
         // check if workspace in starting status before dev machine is started
@@ -111,7 +115,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void workspaceShouldNotHaveRuntimeIfDevMachineCreationFailed() throws Exception {
         final MachineManager machineManagerMock = mock(MachineManager.class);
-        final WorkspaceRuntimes runtimes = new WorkspaceRuntimes(machineManagerMock);
+        final WorkspaceRuntimes runtimes = new WorkspaceRuntimes(machineManagerMock, eventService);
         final WorkspaceImpl workspaceMock = createWorkspace();
         when(machineManagerMock.createMachineSync(any(), any(), any())).thenThrow(new MachineException("Creation error"));
 
@@ -146,7 +150,7 @@ public class WorkspaceRuntimesTest {
           expectedExceptionsMessageRegExp = "Couldn't stop '.*' workspace because its status is 'STARTING'")
     public void shouldNotStopWorkspaceIfItIsStarting() throws Exception {
         final MachineManager machineManagerMock = mock(MachineManager.class);
-        final WorkspaceRuntimes registry = new WorkspaceRuntimes(machineManagerMock);
+        final WorkspaceRuntimes registry = new WorkspaceRuntimes(machineManagerMock, eventService);
         final WorkspaceImpl workspace = createWorkspace();
 
         when(machineManagerMock.createMachineSync(any(), any(), any())).thenAnswer(invocationOnMock -> {

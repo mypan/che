@@ -20,7 +20,6 @@ import org.eclipse.che.commons.lang.NameGenerator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.STOPPED;
@@ -177,7 +176,7 @@ public class WorkspaceImpl implements Workspace {
             return this;
         }
 
-        public WorkspaceImplBuilder fromConfig(WorkspaceConfig workspaceConfig) {
+        public WorkspaceImplBuilder setConfig(WorkspaceConfig workspaceConfig) {
             this.config = new WorkspaceConfigImpl(workspaceConfig);
             return this;
         }
@@ -199,11 +198,6 @@ public class WorkspaceImpl implements Workspace {
 
         public WorkspaceImplBuilder setStatus(WorkspaceStatus status) {
             this.status = status;
-            return this;
-        }
-
-        public WorkspaceImplBuilder setConfig(WorkspaceConfigImpl workspaceConfig) {
-            this.config = workspaceConfig;
             return this;
         }
     }

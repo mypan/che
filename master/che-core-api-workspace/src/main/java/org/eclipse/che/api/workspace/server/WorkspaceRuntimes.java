@@ -11,7 +11,6 @@
 package org.eclipse.che.api.workspace.server;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.Striped;
 
 import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.ConflictException;
@@ -21,6 +20,7 @@ import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.core.model.machine.MachineConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.machine.server.MachineManager;
 import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.api.machine.server.exception.SnapshotException;
@@ -29,6 +29,8 @@ import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceRuntimeImpl;
+import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
+import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.String.format;
-import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
+import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
  * Defines an internal API for managing {@link WorkspaceRuntimeImpl} instances.
@@ -73,12 +75,14 @@ public final class WorkspaceRuntimes {
     private final Map<String, RuntimeDescriptor>        descriptors;
     private final Map<String, Queue<MachineConfigImpl>> startQueues;
     private final MachineManager                        machineManager;
+    private final EventService                          eventService;
 
     private volatile boolean isPostConstructInvoked;
 
     @Inject
-    public WorkspaceRuntimes(MachineManager machineManager) {
+    public WorkspaceRuntimes(MachineManager machineManager, EventService eventService) {
         this.machineManager = machineManager;
+        this.eventService = eventService;
         this.descriptors = new HashMap<>();
         this.startQueues = new HashMap<>();
         this.rwLock = new ReentrantReadWriteLock();
@@ -253,7 +257,7 @@ public final class WorkspaceRuntimes {
             if (descriptor == null) {
                 throw new NotFoundException("Workspace with id '" + workspaceId + "' is not running.");
             }
-            if (descriptor.getRuntimeStatus() != RUNNING) {
+            if (descriptor.getRuntimeStatus() != WorkspaceStatus.RUNNING) {
                 throw new ConflictException(format("Couldn't stop '%s' workspace because its status is '%s'",
                                                    workspaceId,
                                                    descriptor.getRuntimeStatus()));
@@ -323,6 +327,7 @@ public final class WorkspaceRuntimes {
      * Stops workspace destroying all its machines and removing it from in memory storage.
      */
     private void stopMachines(String wsId, WorkspaceRuntimeImpl workspace) throws NotFoundException, ServerException {
+        publishEvent(EventType.STOPPING, wsId, null);
         final List<MachineImpl> machines = new ArrayList<>(workspace.getMachines());
         final MachineImpl devMachine = rmDev(machines);
         // destroying all non-dev machines
@@ -339,6 +344,10 @@ public final class WorkspaceRuntimes {
         // destroying dev-machine
         try {
             machineManager.destroy(devMachine.getId(), false);
+            publishEvent(EventType.STOPPED, wsId, null);
+        } catch (RuntimeException | NotFoundException | ServerException ex) {
+            publishEvent(EventType.ERROR, wsId, ex.getLocalizedMessage());
+            throw ex;
         } finally {
             removeRuntime(wsId);
         }
@@ -357,6 +366,7 @@ public final class WorkspaceRuntimes {
     private void startQueue(String wsId, String envName, boolean recover) throws ServerException,
                                                                                  NotFoundException,
                                                                                  ConflictException {
+        publishEvent(EventType.STARTING, wsId, null);
         MachineConfigImpl config = getPeekConfig(wsId);
         while (config != null) {
             startMachine(config, wsId, envName, recover);
@@ -406,6 +416,7 @@ public final class WorkspaceRuntimes {
         } catch (RuntimeException | MachineException | NotFoundException | SnapshotException | ConflictException ex) {
             if (config.isDev()) {
                 cleanupStartResources(wsId);
+                publishEvent(EventType.ERROR, wsId, ex.getLocalizedMessage());
                 throw ex;
             }
             LOG.error(format("Error while creating non-dev machine '%s' in workspace '%s', environment '%s'",
@@ -432,6 +443,7 @@ public final class WorkspaceRuntimes {
                     final WorkspaceRuntimeImpl runtime = descriptors.get(wsId).getRuntime();
                     if (config.isDev()) {
                         runtime.setDevMachine(machine);
+                        publishEvent(EventType.ERROR, wsId, null);
                     }
                     runtime.getMachines().add(machine);
                 }
@@ -476,6 +488,13 @@ public final class WorkspaceRuntimes {
             }
         }
         return devMachine;
+    }
+
+    private void publishEvent(EventType type, String workspaceId, String error) {
+        eventService.publish(newDto(WorkspaceStatusEvent.class)
+                                     .withEventType(type)
+                                     .withWorkspaceId(workspaceId)
+                                     .withError(error));
     }
 
     /**
@@ -557,7 +576,7 @@ public final class WorkspaceRuntimes {
             if (runtime.getDevMachine() == null) {
                 return WorkspaceStatus.STARTING;
             }
-            return RUNNING;
+            return WorkspaceStatus.RUNNING;
         }
 
         private void setStopping() {
