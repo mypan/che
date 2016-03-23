@@ -11,7 +11,7 @@
 
 -->
 <md-content flex class="create-project-workspace-list">
-  <div ng-show="createProjectWorkspacesController.workspaces.length > 0">
+  <div ng-show="createProjectWorkspacesController.workspaces.length">
     <che-list class="samples-list">
       <che-list-item ng-repeat="workspace in createProjectWorkspacesController.workspaces"
                      ng-init="$first && createProjectWorkspacesController.onWorkspaceSelect(createProjectWorkspacesController.workspace ? createProjectWorkspacesController.workspace : workspace)"
@@ -20,13 +20,16 @@
           <div class="list-item"
                ng-class="{'list-item-active' : createProjectWorkspacesController.workspace.id === workspace.id}"
                ng-click="createProjectWorkspacesController.onWorkspaceSelect(workspace)" layout="column" flex>
-            <div class="list-name">{{workspace.config.name}}</div>
+            <div class="list-item-name">{{workspace.config.name}}</div>
+            <div ng-show="workspace.config.attributes && workspace.config.attributes.stackId" class="list-item-description">
+              {{workspace.config.attributes.stackId}} stack
+            </div>
           </div>
         </div>
       </che-list-item>
     </che-list>
   </div>
-  <div ng-show="createProjectWorkspacesController.workspaces.length === 0" class="list-empty">
+  <div ng-show="!createProjectWorkspacesController.workspaces.length" class="list-empty">
     - No workspaces inside
   </div>
 </md-content>

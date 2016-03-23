@@ -754,6 +754,8 @@ export class CreateProjectCtrl {
     } else if (this.stackTab === 'stack-library') {
       if (this.stackLibraryOption === 'existing-workspace') {
         option = 'reuse-workspace';
+        this.recipeUrl = null;
+        this.stack = null;
       } else {
         this.stack = this.stackLibraryUser;
         option = 'create-workspace';
@@ -794,8 +796,6 @@ export class CreateProjectCtrl {
           });
         }
       }
-
-
     } else {
       this.createProjectSvc.setWorkspaceOfProject(this.workspaceSelected.config.name);
 
