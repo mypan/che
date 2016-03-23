@@ -24,8 +24,8 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.client.DevMachineLauncher.MachineStartedCallback;
+import org.eclipse.che.ide.context.AppContextImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,7 +57,7 @@ public class DevMachineLauncherTest {
     @Mock
     private MachineServiceClient machineServiceClient;
     @Mock
-    private AppContext           appContext;
+    private AppContextImpl       appContext;
     @Mock
     private MachineManager       machineManager;
 

@@ -35,6 +35,11 @@ import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_PREFLIGHT_MAXAGE
 import static org.apache.catalina.filters.CorsFilter.PARAM_CORS_SUPPORT_CREDENTIALS;
 
 /**
+ * The special filter which provides filtering requests in according to settings which are set to {@link CorsFilter}. More information
+ * about filter and parameters you can find in documentation.
+ * The class contains business logic which allows to get allowed origin from api endpoint parameter. For che version we set default
+ * allows origin parameter, which allows send requests to server from any host.
+ *
  * @author Dmitry Shnurenko
  */
 public class CodenvyCorsFilter implements Filter {
