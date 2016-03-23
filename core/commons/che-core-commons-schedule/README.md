@@ -1,14 +1,14 @@
 # Che job scheduling framework
 ## About
-There is such common programming use case when you need to execute some method periodically.
-Usually it implemented with help of some sort ThreadPoolExecutor. But often developers don't pay
-necessary attention for thread start stop routine. As a result we have unnamed thread or thread
-that never stops, etc. Scheduling framework made to take away all threading routine away from
+There is such a common programming use case when you need to execute some method periodically.
+Usually it is implemented with some sort of a ThreadPoolExecutor. However, often developers don't pay
+enough attention to thread start stop routine. As a result we have an unnamed thread or thread
+that never stops, etc. Scheduling framework will take away all threading routine away from
 developer and add a couple of new features.
 
 ## Features
-- Run job with fixed rate
-- Run job with fixed delay
+- Run job with a fixed rate
+- Run job with a fixed delay
 - Run job according to the cron expression
 - Error logging
 - Container configuration
@@ -25,7 +25,7 @@ developer and add a couple of new features.
 
 ## How to use
 ### Installation
-There is o couple of steps you need to do before start. Usually you need to do it once, in target war.
+There is a couple of steps you need to do before start. Usually you need to do it once, in target war.
 
 
 First: add maven dependency.
@@ -46,7 +46,7 @@ Thread: You need to configure core pool size. This is the minimum number of work
 Note: actual number of threads will be corePoolSize+1. One thread is needed to monitor cron jobs.
 
 ### Implementations notes
-Framework can execute methods with any visibility and any name. But method mast have 0 parameters.
+Framework can execute methods with any visibility and any name. But method must have 0 parameters.
 If method that need to be executed is
 ```
  void run()
