@@ -29,27 +29,27 @@ There is a couple of steps you need to do before start. Usually you need to do i
 
 
 First: add maven dependency.
-```
-        <dependency>
-            <groupId>org.eclipse.che.core</groupId>
-            <artifactId>che-core-commons-schedule</artifactId>
-        </dependency>
+```xml
+<dependency>
+    <groupId>org.eclipse.che.core</groupId>
+    <artifactId>che-core-commons-schedule</artifactId>
+</dependency>
 ```
 Second: You need to install Guice module
-```
-        install(new org.eclipse.che.commons.schedule.executor.ScheduleModule());
+```java
+install(new org.eclipse.che.commons.schedule.executor.ScheduleModule());
 ```
 Thread: You need to configure core pool size. This is the minimum number of workers to keep alive.
-```
-  @Named("schedule.core_pool_size") Integer corePoolSize
+```java
+@Named("schedule.core_pool_size") Integer corePoolSize
 ```
 Note: actual number of threads will be corePoolSize+1. One thread is needed to monitor cron jobs.
 
 ### Implementations notes
 Framework can execute methods with any visibility and any name. But method must have 0 parameters.
 If method that need to be executed is
-```
- void run()
+```java
+void run()
 ```
 and class implements java.lang.Runnable then this method will be executed without reflection that suppose to be faster then using reflections. Best practices
 is to implement Runnable interface and schedule method run.
@@ -69,19 +69,19 @@ then subsequent executions may start late, but will not concurrently execute.
 Analogue of java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate
 
 Example 1: Given method scheduleBackup will be executed once a minute after 1 minute initial delay.
-```
+```java
 
 @Singleton
 public class WorkspaceFsBackupScheduler {
-    ...
-    @ScheduleRate(initialDelay = 1, period = 1, unit = TimeUnit.MINUTES)
-    public void scheduleBackup() {
-       ...
-    }
+...
+   @ScheduleRate(initialDelay = 1, period = 1, unit = TimeUnit.MINUTES)
+   public void scheduleBackup() {
+   ...
+   }
 ```
 
 Example 2: Same as example 1, but timings configured over container named parameters.
-```
+```java
 @Singleton
 public class WorkspaceFsBackupScheduler {
     ...
@@ -104,7 +104,7 @@ with the given delay between the termination of one execution and the commenceme
 
 Example 1:  Given method registerRoutingRules will be executed with minute after 1 daley between end and start of
 new job after 1 minute initial delay.
-```
+```java
 @Singleton // should be eager
 public class RouterRulesRegistry {
 
@@ -117,7 +117,7 @@ public class RouterRulesRegistry {
 ```
 
 Example 2:  Same as example 1, but timings configured over container named parameters.
-```
+```java
 @Singleton // should be eager
 public class RouterRulesRegistry {
 
@@ -137,7 +137,7 @@ public class RouterRulesRegistry {
 If you would like to execute some method according to the cron expression you can mark method with annotation @ScheduleCron
 Example 1 :  Send each Sunday at 1:00 AM.
 
-```
+```java
 @Singleton
 public class ReportSender {
     @ScheduleCron(cron = "0 0 1 ? * SUN *")  //
@@ -148,7 +148,7 @@ public class ReportSender {
 
 Example 2 :   Same as example 1, but cron expression configured over container named parameter "report.sender.cron".
 
-```
+```java
 @Singleton
 public class ReportSender {
     @ScheduleCron(cronParameterName = "report.sender.cron")  //
