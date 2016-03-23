@@ -73,6 +73,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 
+// TODO CHE-718
+
 /**
  * Test for {@link StackLoader}
  *
@@ -207,7 +209,6 @@ public class StackLoaderTest {
                                                         .withCommandLine("command line");
 
         WorkspaceConfigDto workspaceConfigDto = newDto(WorkspaceConfigDto.class).withName("SomeWorkspaceConfig")
-                                                                                .withAttributes(attributes)
                                                                                 .withDescription("some workspace")
                                                                                 .withLinks(Collections.singletonList(link))
                                                                                 .withDefaultEnv("some Default Env name")

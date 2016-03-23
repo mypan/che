@@ -541,8 +541,6 @@ public class DefaultWorkspaceConfigValidatorTest {
                                                 .withAttributes(new HashMap<>(singletonMap("cmd-attribute-name", "cmd-attribute-value"))));
         workspaceConfigDto.setCommands(commandDtos);
 
-        workspaceConfigDto.withAttributes(new HashMap<>(singletonMap("ws-attribute-name", "ws-attribute-value")));
-
         return workspaceConfigDto;
     }
 }
