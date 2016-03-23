@@ -1,10 +1,10 @@
 # Che job scheduling framework
 ## About
-There is such common programming usecase then you need to execute some method periodically.
-Usually it implemented with help of some sort ThreadPoolExecutor. But often developers not pay
-nemeses attention for thread start stop routine. As a result we have unnamed thread or thread
-that never stops, etc. Scheduling framework build to take away all threading routine away from developer
-and add a couple of new features.
+There is such common programming use case when you need to execute some method periodically.
+Usually it implemented with help of some sort ThreadPoolExecutor. But often developers don't pay
+necessary attention for thread start stop routine. As a result we have unnamed thread or thread
+that never stops, etc. Scheduling framework made to take away all threading routine away from
+developer and add a couple of new features.
 
 ## Features
 - Run job with fixed rate
@@ -14,6 +14,7 @@ and add a couple of new features.
 - Container configuration
 - Automatic job discovering
 - Automatic thread pull start and shutdown.
+
 ## TODO
 - Ability to run demon jobs (can be terminated during JVM shutdown)
 - Metrics and statistic
@@ -52,7 +53,7 @@ If method that need to be executed is
 ```
 and class implements java.lang.Runnable then this method will be executed without reflection that suppose to be faster then using reflections. Best practices
 is to implement Runnable interface and schedule method run.
-Classes mast be annotated with javax.inject.Singleton or com.google.inject.Singleton and binded in guice as Eager singleton.
+Classes must be annotated with javax.inject.Singleton or com.google.inject.Singleton and binded in guice as Eager singleton.
 
 
 
@@ -91,11 +92,8 @@ public class WorkspaceFsBackupScheduler {
        ...
     }
 ```
-NOTE: if initialDelay and initialDelayParameterName  configured at the same time, initialDelayParameterName has grater weight
-when statically configured value. Same for period and periodParameterName.
-
 <blockquote>
-    <p>NOTE: if initialDelay and initialDelayParameterName  configured at the same time, initialDelayParameterName has grater weight
+    <p>NOTE: if initialDelay and initialDelayParameterName  configured at the same time, initialDelayParameterName has greater weight
        when statically configured value. Same for period and periodParameterName.</p>
 </blockquote>
 
@@ -131,7 +129,7 @@ public class RouterRulesRegistry {
     }
 ```
 <blockquote>
-    <p>NOTE: if initialDelayParameterName and initialDelay  configured at the same time, initialDelayParameterName has grater weight
+    <p>NOTE: if initialDelayParameterName and initialDelay  configured at the same time, initialDelayParameterName has greater weight
        when statically configured value. Same for delay and delayParameterName.</p>
 </blockquote>
 
