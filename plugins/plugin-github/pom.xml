@@ -26,5 +26,8 @@
         <module>che-plugin-github-oauth2</module>
         <module>che-plugin-github-ext-github</module>
         <module>che-plugin-github-provider-github</module>
+        <module>che-plugin-github-server</module>
+        <module>che-plugin-github-ext-github-client</module>
+        <module>che-plugin-github-ext-github-shared</module>
     </modules>
 </project>
