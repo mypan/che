@@ -27,9 +27,9 @@ import org.eclipse.che.api.machine.server.recipe.PermissionsCheckerImpl;
 import org.eclipse.che.api.machine.server.recipe.RecipeLoader;
 import org.eclipse.che.api.machine.server.recipe.RecipeService;
 import org.eclipse.che.api.machine.shared.Constants;
-import org.eclipse.che.api.project.server.ProjectTemplateDescriptionLoader;
-import org.eclipse.che.api.project.server.ProjectTemplateRegistry;
-import org.eclipse.che.api.project.server.ProjectTemplateService;
+import org.eclipse.che.api.project.server.template.ProjectTemplateDescriptionLoader;
+import org.eclipse.che.api.project.server.template.ProjectTemplateRegistry;
+import org.eclipse.che.api.project.server.template.ProjectTemplateService;
 import org.eclipse.che.api.ssh.server.SshService;
 import org.eclipse.che.api.user.server.UserProfileService;
 import org.eclipse.che.api.user.server.UserService;
@@ -114,7 +114,7 @@ public class ApiModule extends AbstractModule {
         Multibinder<ServerConf> machineServers = Multibinder.newSetBinder(binder(),
                                                                           ServerConf.class,
                                                                           Names.named("machine.docker.dev_machine.machine_servers"));
-        machineServers.addBinding().toInstance(new ServerConfImpl(Constants.WSAGENT_DEBUG_REFERENCE, "4403/tcp", "http"));
+        machineServers.addBinding().toInstance(new ServerConfImpl(Constants.WSAGENT_DEBUG_REFERENCE, "4403/tcp", "http", null));
 
         bind(RecipeLoader.class);
         Multibinder.newSetBinder(binder(), String.class, Names.named("predefined.recipe.path"))
@@ -126,6 +126,7 @@ public class ApiModule extends AbstractModule {
 
         bindConstant().annotatedWith(Names.named(org.eclipse.che.api.machine.server.WsAgentLauncherImpl.WS_AGENT_PROCESS_START_COMMAND))
                       .to("rm -rf ~/che && mkdir -p ~/che && unzip -qq /mnt/che/ws-agent.zip -d ~/che/ws-agent && " +
+                          "sudo chown -R $(id -u -n) /projects && " +
                           "export JPDA_ADDRESS=\"4403\" && ~/che/ws-agent/bin/catalina.sh jpda run");
 
         install(new org.eclipse.che.plugin.docker.machine.ext.LocalStorageModule());
