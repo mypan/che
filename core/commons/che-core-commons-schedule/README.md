@@ -20,6 +20,7 @@ and add a couple of new features.
 - Ability to control thread names
 - Time by UTC
 - Do not interrupt future jobs on exceptions
+- Ability to disable task.
 
 ## How to use
 ### Installation
@@ -56,7 +57,7 @@ Classes mast be annotated with javax.inject.Singleton or com.google.inject.Singl
 
 
 ### Run job with fixed rate
-If you would like to execute some method with fixed rate. You can mark method with annotation
+If you would like to execute some method with fixed rate. You can mark it with annotation
 for execution a periodic action that becomes enabled first after the given initial delay,
 and subsequently with the given period; that is executions will commence after initialDelay
 then initialDelay+period, then initialDelay + 2 * period, and so on.
@@ -88,8 +89,20 @@ public class WorkspaceFsBackupScheduler {
        ...
     }
 ```
-NOTE: if parameterName has grater wight when statically configured value.
+NOTE: if initialDelay and initialDelayParameterName  configured at the same time, initialDelayParameterName has grater weight
+when statically configured value. Same for period and periodParameterName.
 
+<blockquote>
+    <p>NOTE: if initialDelay and initialDelayParameterName  configured at the same time, initialDelayParameterName has grater weight
+       when statically configured value. Same for period and periodParameterName.</p>
+</blockquote>
 
+### Run job with fixed delay
+If you would like to execute some method with fixed delay. You can mark method for execution periodic action that becomes enabled first after the given initial delay, and subsequently
+ * with the given delay between the termination of one execution and the commencement of the next.
+ * <p/>
+ * Analogue of {@link java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long,
+ * java.util.concurrent.TimeUnit)}  }
+ *
 
 
