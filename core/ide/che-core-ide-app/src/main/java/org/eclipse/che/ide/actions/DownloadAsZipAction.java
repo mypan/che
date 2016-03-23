@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
@@ -41,8 +40,6 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  */
 @Singleton
 public class DownloadAsZipAction extends AbstractPerspectiveAction {
-
-    private final AnalyticsEventLogger     eventLogger;
     private final AppContext               appContext;
     private final DownloadContainer        downloadContainer;
     private final ProjectExplorerPresenter projectExplorer;
@@ -52,7 +49,6 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
     public DownloadAsZipAction(AppContext appContext,
                                CoreLocalizationConstant locale,
                                Resources resources,
-                               AnalyticsEventLogger eventLogger,
                                DownloadContainer downloadContainer,
                                ProjectExplorerPresenter projectExplorer,
                                WsAgentUrlProvider urlProvider) {
@@ -62,7 +58,6 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
               null,
               resources.downloadZip());
         this.appContext = appContext;
-        this.eventLogger = eventLogger;
         this.downloadContainer = downloadContainer;
         this.projectExplorer = projectExplorer;
         this.urlProvider = urlProvider;
@@ -71,8 +66,6 @@ public class DownloadAsZipAction extends AbstractPerspectiveAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         String url = urlProvider.get() + "/project/" + appContext.getWorkspaceId() + "/export/" + getPath();
         downloadContainer.setUrl(url);
     }

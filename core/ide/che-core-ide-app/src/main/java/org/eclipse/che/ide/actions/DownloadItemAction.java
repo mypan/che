@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.api.machine.gwt.client.WsAgentUrlProvider;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.Action;
@@ -36,7 +35,6 @@ public class DownloadItemAction extends Action {
 
     private final String BASE_URL;
 
-    private final AnalyticsEventLogger     eventLogger;
     private final DownloadContainer        downloadContainer;
     private final ProjectExplorerPresenter projectExplorer;
     private final WsAgentUrlProvider       urlProvider;
@@ -44,12 +42,10 @@ public class DownloadItemAction extends Action {
     @Inject
     public DownloadItemAction(AppContext appContext,
                               CoreLocalizationConstant locale,
-                              AnalyticsEventLogger eventLogger,
                               DownloadContainer downloadContainer,
                               ProjectExplorerPresenter projectExplorer,
                               WsAgentUrlProvider urlProvider) {
         super(locale.downloadItemName(), locale.downloadItemDescription());
-        this.eventLogger = eventLogger;
         this.downloadContainer = downloadContainer;
         this.projectExplorer = projectExplorer;
         this.urlProvider = urlProvider;
@@ -60,8 +56,6 @@ public class DownloadItemAction extends Action {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         Selection<?> selection = projectExplorer.getSelection();
         if (selection.isEmpty() || selection.getAllElements().size() > 1) {
             return;
