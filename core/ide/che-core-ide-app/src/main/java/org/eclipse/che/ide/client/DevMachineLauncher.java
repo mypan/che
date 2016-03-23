@@ -23,7 +23,7 @@ import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.context.AppContextImpl;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.inject.Named;
@@ -41,13 +41,13 @@ import static org.eclipse.che.api.core.model.machine.MachineStatus.RUNNING;
 public class DevMachineLauncher {
 
     private final MachineServiceClient machineServiceClient;
-    private final AppContext           appContext;
+    private final AppContextImpl       appContext;
     private final MachineManager       machineManager;
     private final String               wsAgentPath;
 
     @Inject
     public DevMachineLauncher(@Named("ws.agent.path") String wsAgentPath,
-                              AppContext appContext,
+                              AppContextImpl appContext,
                               MachineManager machineManager,
                               MachineServiceClient machineServiceClient) {
         this.wsAgentPath = wsAgentPath;

@@ -101,14 +101,6 @@ public interface AppContext {
 
     void setProjectsRoot(String projectsRoot);
 
-    /**
-     * Sets URL to send requests to workspace agent.
-     *
-     * @param wsAgentURL
-     *         workspace agent url
-     */
-    void setWsAgentURL(String wsAgentURL);
-
     /** Returns URL to send requests to workspace agent. */
     String getWsAgentURL();
 }

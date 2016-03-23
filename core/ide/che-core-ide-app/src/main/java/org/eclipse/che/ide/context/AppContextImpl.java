@@ -175,7 +175,6 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
         this.projectsRoot = projectsRoot;
     }
 
-    @Override
     public void setWsAgentURL(String wsAgentURL) {
         this.wsAgentURL = wsAgentURL;
     }
