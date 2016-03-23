@@ -1034,8 +1034,7 @@ export class CreateProjectCtrl {
       currentStack = this.stackLibraryUser;
     }
     this.updateCurrentStack(currentStack);
-
-    this.checkDisabledWorkspace();
+    this.updateWorkspaceStatus(false);
   }
 
   /**
@@ -1046,7 +1045,6 @@ export class CreateProjectCtrl {
       return;
     }
     this.setWorkspaceName(this.workspaceSelected.config.name);
-    this.stackLibraryOption = 'existing-workspace';
     let stack = null;
     if (this.workspaceSelected.config.attributes && this.workspaceSelected.config.attributes.stackId) {
       let stackId = this.workspaceSelected.config.attributes.stackId;
@@ -1060,7 +1058,7 @@ export class CreateProjectCtrl {
     if (findEnvironment) {
       this.workspaceRam = findEnvironment.machineConfigs[0].limits.ram;
     }
-    this.checkDisabledWorkspace();
+    this.updateWorkspaceStatus(true);
   }
 
   /**
@@ -1069,19 +1067,18 @@ export class CreateProjectCtrl {
    */
   cheStackLibrarySelecter(stack) {
     this.stackLibraryUser = stack;
-    this.stackLibraryOption = 'new-workspace';
-
     this.updateCurrentStack(stack);
-    this.checkDisabledWorkspace();
+    this.updateWorkspaceStatus(false);
   }
 
-  checkDisabledWorkspace() {
-    let val = this.stackLibraryOption === 'existing-workspace';
-    // if workspace can be configured, generate a new workspace name
-    if (!val) {
+  updateWorkspaceStatus(isExistingWorkspace) {
+    if (isExistingWorkspace) {
+      this.stackLibraryOption = 'existing-workspace';
+    } else {
+      this.stackLibraryOption = 'new-workspace';
       this.generateWorkspaceName();
     }
-    this.$rootScope.$broadcast('chePanel:disabled', {id: 'create-project-workspace', disabled: val});
+    this.$rootScope.$broadcast('chePanel:disabled', {id: 'create-project-workspace', disabled: isExistingWorkspace});
   }
 
   /**
